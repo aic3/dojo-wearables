@@ -1,0 +1,82 @@
+{
+    "tshirt-red": {
+      "scale": {
+        "x": 0.7,
+        "y": 0.5,
+        "z": 0.5
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "displayName": "T-Shirt Red",
+      "resourceName": "tshirt-red.glb",
+      "attachPoint": "spine-middle"
+    },
+    "tshirt-blue": {
+      "scale": {
+        "x": 0.7,
+        "y": 0.5,
+        "z": 0.5
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "displayName": "T-Shirt Blue",
+      "resourceName": "tshirt-blue.glb",
+      "attachPoint": "spine-middle"
+    },
+    "tshirt-green": {
+      "scale": {
+        "x": 0.7,
+        "y": 0.5,
+        "z": 0.5
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "displayName": "T-Shirt Green",
+      "resourceName": "tshirt-green.glb",
+      "attachPoint": "spine-middle"
+    },
+    "tshirt-white": {
+      "scale": {
+        "x": 0.7,
+        "y": 0.5,
+        "z": 0.5
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0.2
+      },
+      "rotation": {
+        "x": 0,
+        "y": 270,
+        "z": 0
+      },
+      "displayName": "T-Shirt White",
+      "resourceName": "tshirt-white.glb",
+      "attachPoint": "spine-middle"
+    }
+  }

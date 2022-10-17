@@ -9,7 +9,7 @@ trigger:
       - master
   paths:
     include:
-      - samples/wear-a-hat/*
+      - src/tshirts*
 
 resources:
 - repo: self
@@ -19,7 +19,7 @@ variables:
   dockerRegistryServiceConnection: '4e58cb86-5184-40de-b14b-ac7156de5891'
   imageRepository: 'mrewearahatf2ab'
   containerRegistry: 'mreregistry.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/samples/wear-a-hat/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
   tag: '$(Build.SourceVersion)'
   
   # Agent VM image name

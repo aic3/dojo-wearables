@@ -90,6 +90,8 @@ export default class WearAHat {
 		} else {
 			await this.startedImpl();
 		}
+
+		console.log("TShirts Altspace VR web started");
 	}
 
 	// use () => {} syntax here to get proper scope binding when called via setTimeout()
@@ -175,6 +177,8 @@ export default class WearAHat {
 				}
 			}
 		});
+
+		console.log("TShirt menu created");
 	}
 
 	/**
@@ -206,6 +210,9 @@ export default class WearAHat {
 	 * @param userId The id of the user we will attach the hat to.
 	 */
 	private wearShirt(shirtId: string, userId: MRE.Guid) {
+		// const user = this.context.user(userId);
+		// console.log("Assigning shirt " + shirtId + " to user " + user.name + "(" + user.id + ")");
+
 		// If the user is wearing a hat, destroy it.
 		this.removeHats(this.context.user(userId));
 

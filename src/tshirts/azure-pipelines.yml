@@ -16,9 +16,9 @@ resources:
 
 variables:
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '4e58cb86-5184-40de-b14b-ac7156de5891'
-  imageRepository: 'mrewearahatf2ab'
-  containerRegistry: 'mreregistry.azurecr.io'
+  dockerRegistryServiceConnection: '7bea5c04-127f-4d9c-895c-ff149edac736'
+  imageRepository: 'dojoapps'
+  containerRegistry: 'dojoapps.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
   tag: '$(Build.SourceVersion)'
   

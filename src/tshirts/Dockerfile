@@ -1,6 +1,8 @@
 FROM node:10.16-alpine
 WORKDIR /opt/mre
 
+ENV WEBSITE_PORT=3901
+
 COPY package*.json ./
 RUN ["npm", "install", "--unsafe-perm"]
 
@@ -10,7 +12,5 @@ RUN ["npm", "run", "build-only"]
 
 COPY public ./public/
 
-EXPOSE 3901/tcp
-EXPOSE 80/tcp
-EXPOSE 443/tcp
+EXPOSE ${WEBSITE_PORT}/tcp
 CMD ["npm", "start"]

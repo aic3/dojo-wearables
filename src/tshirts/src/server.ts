@@ -23,7 +23,8 @@ function runApp() {
 	// Start listening for connections, and serve static files.
 	const server = new MRE.WebHost({
 		// baseUrl: 'http://<ngrok-id>.ngrok.io',
-		baseDir: resolvePath(__dirname, '../public')
+		baseDir: resolvePath(__dirname, '../public'),
+		port: 443
 	});
 
 	// Handle new application sessions

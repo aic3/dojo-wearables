@@ -1,7 +1,7 @@
 FROM node:10.16-alpine
 WORKDIR /opt/mre
 
-ENV WEBSITE_PORT=3901
+ENV WEBSITE_PORT=443
 
 COPY package*.json ./
 RUN ["npm", "install", "--unsafe-perm"]

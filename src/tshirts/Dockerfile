@@ -13,4 +13,4 @@ RUN ["npm", "run", "build-only"]
 COPY public ./public/
 
 EXPOSE ${WEBSITE_PORT}/tcp
-CMD ["npm", "start", "port", ${WEBSITE_PORT}]
+CMD ["npm", "start", "port", "${WEBSITE_PORT}"]

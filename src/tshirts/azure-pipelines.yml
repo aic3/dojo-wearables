@@ -7,7 +7,7 @@ trigger:
   branches:
     include:
       - master
-      - dev
+      - development
   paths:
     include:
       - src/tshirts*
@@ -21,7 +21,7 @@ variables:
   imageRepository: 'dojoapps'
   containerRegistry: 'dojoapps.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
-  tag: '$(Build.SourceVersion)'
+  tag: '$(Build.BuildNumber)'
   
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -42,5 +42,5 @@ stages:
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+        #tags: |
+          #$(tag)

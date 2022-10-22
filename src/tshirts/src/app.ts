@@ -57,7 +57,7 @@ export default class WearAHat {
 	 */
 	constructor(private context: MRE.Context) {
 		this.assets = new MRE.AssetContainer(context);
-		// Hook the context events we're interested in.
+		// Hook the context events we're interested npm buildin.
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
 	}

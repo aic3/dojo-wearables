@@ -6,7 +6,7 @@
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 
 /**
- * The structure of a hat entry in the hat database.
+ * Shirt db entry
  */
 type ShirtDescriptor = {
 	displayName: string;
@@ -30,24 +30,23 @@ type ShirtDescriptor = {
 };
 
 /**
- * The structure of the hat database.
+ * The structure of the asset database.
  */
 type ShirtDatabase = {
 	[key: string]: ShirtDescriptor;
 };
 
-// Load the database of hats.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
 /**
- * WearAHat Application - Showcasing avatar attachments.
+ * DojoShirt Application - Showcasing avatar attachments.
  */
-export default class WearAHat {
-	// Container for preloaded hat prefabs.
+export default class DojoShirt {
+	// Container for preloaded dojo-shirt prefabs.
 	private assets: MRE.AssetContainer;
 	private prefabs: { [key: string]: MRE.Prefab } = {};
-	// Container for instantiated hats.
+	// Container for instantiated dojo shirt assets.
 	private attachedShirts = new Map<MRE.Guid, MRE.Actor>();
 
 	/**
@@ -63,7 +62,7 @@ export default class WearAHat {
 	}
 
 	/**
-	 * Called when a Hats application session starts up.
+	 * Called when  application session starts up.
 	 */
 	private async started() {
 		// Check whether code is running in a debuggable watched filesystem
@@ -97,9 +96,9 @@ export default class WearAHat {
 	// use () => {} syntax here to get proper scope binding when called via setTimeout()
 	// if async is required, next line becomes private startedImpl = async () => {
 	private startedImpl = async () => {
-		// Preload all the hat models.
+		// Preload all the models.
 		await this.preloadShirts();
-		// Show the hat menu.
+		// Show the menu.
 		this.showShirtsMenu();
 	}
 
@@ -108,13 +107,13 @@ export default class WearAHat {
 	 * @param user The user that left the building.
 	 */
 	private userLeft(user: MRE.User) {
-		// If the user was wearing a hat, destroy it. Otherwise it would be
+		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
-		this.removeHats(user);
+		this.removeAssets(user);
 	}
 
 	/**
-	 * Show a menu of hat selections.
+	 * Show a menu
 	 */
 	private showShirtsMenu() {
 		// Create a parent object for all the menu items.
@@ -124,7 +123,7 @@ export default class WearAHat {
 		// Create menu button
 		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
 
-		// Loop over the hat database, creating a menu item for each entry.
+		// Loop over the database, creating a menu item for each entry.
 		for (const shirtId of Object.keys(ShirtDatabase)) {
 			// Create a clickable button.
 			const button = MRE.Actor.Create(this.context, {
@@ -182,18 +181,18 @@ export default class WearAHat {
 	}
 
 	/**
-	 * Preload all hat resources. This makes instantiating them faster and more efficient.
+	 * Preload all  resources. This makes instantiating them faster and more efficient.
 	 */
 	private preloadShirts() {
-		// Loop over the hat database, preloading each hat resource.
+		// Loop over the database, preloading each resource.
 		// Return a promise of all the in-progress load promises. This
-		// allows the caller to wait until all hats are done preloading
+		// allows the caller to wait until all assets are done preloading
 		// before continuing.
 		return Promise.all(
 			Object.keys(ShirtDatabase).map(shirtId => {
-				const hatRecord = ShirtDatabase[shirtId];
-				if (hatRecord.resourceName) {
-					return this.assets.loadGltf(hatRecord.resourceName)
+				const asset = ShirtDatabase[shirtId];
+				if (asset.resourceName) {
+					return this.assets.loadGltf(asset.resourceName)
 						.then(assets => {
 							this.prefabs[shirtId] = assets.find(a => a.prefab !== null) as MRE.Prefab;
 						})
@@ -205,27 +204,27 @@ export default class WearAHat {
 	}
 
 	/**
-	 * Instantiate a hat and attach it to the avatar's head.
-	 * @param hatId The id of the hat in the hat database.
-	 * @param userId The id of the user we will attach the hat to.
+	 * Instantiate an asset and attach it to the avatar's head.
+	 * @param assetId The id of the asset in the database.
+	 * @param userId The id of the user we will attach the hassetat to.
 	 */
-	private wearShirt(shirtId: string, userId: MRE.Guid) {
+	private wearShirt(assetId: string, userId: MRE.Guid) {
 		// const user = this.context.user(userId);
 		// console.log("Assigning shirt " + shirtId + " to user " + user.name + "(" + user.id + ")");
 
-		// If the user is wearing a hat, destroy it.
-		this.removeHats(this.context.user(userId));
+		// If the user is wearing an asset, destroy it.
+		this.removeAssets(this.context.user(userId));
 
-		const shirtRecord = ShirtDatabase[shirtId];
+		const shirtRecord = ShirtDatabase[assetId];
 
 		// If the user selected 'none', then early out.
 		if (!shirtRecord.resourceName) {
 			return;
 		}
 
-		// Create the hat model and attach it to the avatar's head.
+		// Create the model and attach it to the avatar's head.
 		this.attachedShirts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {
-			prefab: this.prefabs[shirtId],
+			prefab: this.prefabs[assetId],
 			actor: {
 				transform: {
 					local: {
@@ -245,7 +244,7 @@ export default class WearAHat {
 		}));
 	}
 
-	private removeHats(user: MRE.User) {
+	private removeAssets(user: MRE.User) {
 		if (this.attachedShirts.has(user.id)) { this.attachedShirts.get(user.id).destroy(); }
 		this.attachedShirts.delete(user.id);
 	}

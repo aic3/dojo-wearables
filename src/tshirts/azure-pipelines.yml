@@ -21,7 +21,7 @@ variables:
   imageRepository: 'dojoapps'
   containerRegistry: 'dojoapps.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
-  tag: 'doho-tshirts'
+  tag: 'dojo-tshirts'
   
   # Agent VM image name
   vmImageName: 'ubuntu-latest'

@@ -21,7 +21,7 @@ variables:
   imageRepository: 'dojoapps'
   containerRegistry: 'dojoapps.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
-  tag: 'latest'
+  tag: '$(Build.SourceVersion)'
   
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -44,3 +44,4 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
          tags: |
           $(tag)
+          $(IS_LATEST)

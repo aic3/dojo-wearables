@@ -2,7 +2,7 @@ Displays a menu of hats that avatars can wear. Showcases avatar attachments.
 
 ## Setup
 
-* Open a command prompt to this sample's folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follow.
+* Open a command prompt to this folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follow.
 * Open the root folder of this repo in VSCode if you wish to follow the VSCode-oriented instructions.
 
 ## Build
@@ -48,8 +48,8 @@ This setup requires launching the app from a terminal. VSCode has a built-in ter
 
 Once you have your MRE up and running, and you've successfully spawned an instance in AltspaceVR or another supported platform, it is time to make some code changes and see hot reload in action:
 
-* In VSCode, open `samples/wear-a-hat/app.ts`.
-* Find the line `contents: ''.padStart(8, ' ') + "Wear a Hat",` near the bottom of the file and change it to `contents: ''.padStart(8, ' ') + "Pick a Hat",`.
+* In VSCode, open `src/tshirts/app.ts`.
+* Find the line `contents: ''.padStart(8, ' ') + "Dojo Shirts",` near the bottom of the file and change it to `contents: ''.padStart(8, ' ') + "Pick a Hat",`.
 * Save the file.
 * Watch how the changes to your code are automatically detected and reloaded. See the menu text change in response to your modified code.
 

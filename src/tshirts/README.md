@@ -1,4 +1,6 @@
-Displays a menu of hats that avatars can wear. Showcases avatar attachments.
+# Summary
+
+* forked from the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
 
 ## Setup
 

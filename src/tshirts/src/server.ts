@@ -21,6 +21,7 @@ dotenv.config();
 // the server starts accepting connections.
 function runApp(port: number) {
 	// Start listening for connections, and serve static files.
+	console.log("creating MRE.Webhost on port: " + port);
 	const server = new MRE.WebHost({
 		// baseUrl: 'http://<ngrok-id>.ngrok.io',
 		baseDir: resolvePath(__dirname, '../public') ,
@@ -29,6 +30,7 @@ function runApp(port: number) {
 
 	// Handle new application sessions
 	server.adapter.onConnection(context => new App(context));
+	console.log("Webhost created");
 }
 
 // Check whether code is running in a debuggable watched filesystem
@@ -41,7 +43,7 @@ const delay = 1000;
 const pargv = process.execArgv.join();
 const isDebug = pargv.includes('inspect') || pargv.includes('debug');
 
-let port = 3910;
+let port = 3901;
 const portVar = process.argv.indexOf("port");
 
 if (portVar > 0){

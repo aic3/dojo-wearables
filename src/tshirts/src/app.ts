@@ -55,6 +55,7 @@ export default class DojoShirt {
 	 * @param baseUrl The baseUrl to this project's `./public` folder.
 	 */
 	constructor(private context: MRE.Context) {
+		console.log("creating MRE context for: "+ context.user.name);
 		this.assets = new MRE.AssetContainer(context);
 		// Hook the context events we're interested npm buildin.
 		this.context.onStarted(() => this.started());

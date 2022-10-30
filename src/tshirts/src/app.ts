@@ -11,6 +11,13 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 type ShirtDescriptor = {
 	displayName: string;
 	resourceName: string;
+	transform: string;
+};
+
+/*
+asset transforms
+*/
+type TransformDescriptor = {
 	attachPoint: string;
 	scale: {
 		x: number;
@@ -27,7 +34,7 @@ type ShirtDescriptor = {
 		y: number;
 		z: number;
 	};
-};
+}
 
 /**
  * The structure of the asset database.
@@ -36,8 +43,15 @@ type ShirtDatabase = {
 	[key: string]: ShirtDescriptor;
 };
 
+type TransformsDB = {
+	[key: string]: TransformDescriptor;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const TransformsDB: TransformsDB = require('../public/transforms.json'); 
 
 /**
  * DojoShirt Application - Showcasing avatar attachments.
@@ -217,6 +231,7 @@ export default class DojoShirt {
 		this.removeAssets(this.context.user(userId));
 
 		const shirtRecord = ShirtDatabase[assetId];
+		const transformRecord = TransformsDB[shirtRecord.transform];
 
 		// If the user selected 'none', then early out.
 		if (!shirtRecord.resourceName) {
@@ -229,16 +244,16 @@ export default class DojoShirt {
 			actor: {
 				transform: {
 					local: {
-						position: shirtRecord.position,
+						position: transformRecord.position,
 						rotation: MRE.Quaternion.FromEulerAngles(
-							shirtRecord.rotation.x * MRE.DegreesToRadians,
-							shirtRecord.rotation.y * MRE.DegreesToRadians,
-							shirtRecord.rotation.z * MRE.DegreesToRadians),
-						scale: shirtRecord.scale,
+							transformRecord.rotation.x * MRE.DegreesToRadians,
+							transformRecord.rotation.y * MRE.DegreesToRadians,
+							transformRecord.rotation.z * MRE.DegreesToRadians),
+						scale: transformRecord.scale,
 					}
 				},
 				attachment: {
-					attachPoint: shirtRecord.attachPoint as MRE.AttachPoint,
+					attachPoint: transformRecord.attachPoint as MRE.AttachPoint,
 					userId
 				}
 			}

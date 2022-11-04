@@ -207,11 +207,16 @@ export default class DojoShirt {
 			Object.keys(ShirtDatabase).map(shirtId => {
 				const asset = ShirtDatabase[shirtId];
 				if (asset.resourceName) {
+					console.log("pre-loading asset: " + shirtId);
 					return this.assets.loadGltf(asset.resourceName)
 						.then(assets => {
+							console.log(asset.resourceName + " loaded");
 							this.prefabs[shirtId] = assets.find(a => a.prefab !== null) as MRE.Prefab;
 						})
-						.catch(e => MRE.log.error("app", e));
+						.catch(e => {
+							console.log("error: " + e);
+							MRE.log.error("app", e);
+						});
 				} else {
 					return Promise.resolve();
 				}

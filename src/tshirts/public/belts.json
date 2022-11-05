@@ -1,16 +1,20 @@
 {
     "belts" : {
         "white" : { 
-            "order": 0
+            "order": 0,
+            "resourceName" : "belt-white.glb"
         },
         "green" : { 
-            "order": 1
+            "order": 1,
+            "resourceName" : "belt-green.glb"
         },
         "orange" : { 
-            "order": 2
+            "order": 2,
+            "resourceName" : "belt-orange.glb"
         },
         "black" : { 
-            "order": 3
+            "order": 3,
+            "resourceName" : "belt-black.glb"
         }
     },
     "transform" : "dojo-belt"

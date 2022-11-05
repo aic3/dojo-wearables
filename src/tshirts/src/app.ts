@@ -19,6 +19,7 @@ type ShirtDescriptor = {
  */
 type BeltOrderDescriptor = {
 	order: number;
+	resourceName: string;
 };
 
 type BeltDescriptor = {
@@ -67,7 +68,7 @@ type TransformsDB = {
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const BeltsDB: ShirtDatabase = require('../public/belts.json');
+const BeltsDB: BeltsDB = require('../public/belts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const TransformsDB: TransformsDB = require('../public/transforms.json'); 
@@ -253,8 +254,8 @@ export default class DojoShirt {
 	private preloadBelts() {
 		return Promise.all(
 			Object.keys(BeltsDB.belts).map(beltId => {
-				const belt = "belt-" + beltId + ".glb";
-				return this.preloadAsset(beltId, belt);				
+				const belt = BeltsDB.belts[beltId];
+				return this.preloadAsset(beltId, belt.resourceName);				
 			})
 		);
 	}

@@ -1,0 +1,17 @@
+{
+    "belts" : {
+        "white" : { 
+            "order": 0
+        },
+        "green" : { 
+            "order": 1
+        },
+        "orange" : { 
+            "order": 2
+        },
+        "black" : { 
+            "order": 3
+        }
+    },
+    "transform" : "dojo-belt"
+}

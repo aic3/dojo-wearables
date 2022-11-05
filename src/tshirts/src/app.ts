@@ -14,6 +14,17 @@ type ShirtDescriptor = {
 	transform: string;
 };
 
+/**
+ * ShirtDB entry
+ */
+type BeltOrderDescriptor = {
+	order: number;
+};
+
+type BeltDescriptor = {
+	[key: string]: BeltOrderDescriptor;
+};
+
 /*
 asset transforms
 */
@@ -43,12 +54,20 @@ type ShirtDatabase = {
 	[key: string]: ShirtDescriptor;
 };
 
+type BeltsDB = {
+	belts: BeltDescriptor;
+	transform: string;
+};
+
 type TransformsDB = {
 	[key: string]: TransformDescriptor;
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BeltsDB: ShirtDatabase = require('../public/belts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const TransformsDB: TransformsDB = require('../public/transforms.json'); 
@@ -60,8 +79,12 @@ export default class DojoShirt {
 	// Container for preloaded dojo-shirt prefabs.
 	private assets: MRE.AssetContainer;
 	private prefabs: { [key: string]: MRE.Prefab } = {};
+
 	// Container for instantiated dojo shirt assets.
 	private attachedShirts = new Map<MRE.Guid, MRE.Actor>();
+
+	// Container for dojo belt user assignment
+	private assignedBelts = new Map<MRE.Guid, MRE.Actor>();
 
 	/**
 	 * Constructs a new instance of this class.
@@ -113,8 +136,14 @@ export default class DojoShirt {
 	private startedImpl = async () => {
 		// Preload all the models.
 		await this.preloadShirts();
+
+		await this.preloadBelts();
+
 		// Show the menu.
 		this.showShirtsMenu();
+
+		// create the rewards button
+		this.createRewardButton();
 	}
 
 	/**
@@ -195,6 +224,10 @@ export default class DojoShirt {
 		console.log("TShirt menu created");
 	}
 
+	private createRewardButton() {
+
+	}
+
 	/**
 	 * Preload all  resources. This makes instantiating them faster and more efficient.
 	 */
@@ -207,20 +240,47 @@ export default class DojoShirt {
 			Object.keys(ShirtDatabase).map(shirtId => {
 				const asset = ShirtDatabase[shirtId];
 				if (asset.resourceName) {
-					console.log("pre-loading asset: " + shirtId);
-					return this.assets.loadGltf(asset.resourceName)
-						.then(assets => {
-							console.log(asset.resourceName + " loaded");
-							this.prefabs[shirtId] = assets.find(a => a.prefab !== null) as MRE.Prefab;
-						})
-						.catch(e => {
-							console.log("error: " + e);
-							MRE.log.error("app", e);
-						});
+					return this.preloadAsset(shirtId, asset.resourceName);					
 				} else {
 					return Promise.resolve();
 				}
 			}));
+	}
+
+	/**
+	 * preload the dojo belt assets 
+	 */
+	private preloadBelts() {
+		return Promise.all(
+			Object.keys(BeltsDB.belts).map(beltId => {
+				const belt = "belt-" + beltId + ".glb";
+				return this.preloadAsset(beltId, belt);				
+			})
+		);
+	}
+
+	/**
+	 * preloads asset into the local prefabs
+	 */
+
+	private preloadAsset(id: string, filename: string){
+		console.log("pre-loading asset[" + id + "]: " + filename);
+		return this.assets.loadGltf(filename)
+			.then(assets => {
+				console.log(id + " loaded");
+				this.prefabs[id] = assets.find(a => a.prefab !== null) as MRE.Prefab;
+			})
+			.catch(e => {
+				this.logError(e);
+			});
+	}
+
+	/**
+	 * generic error logging
+	 */
+	private logError(e: any){
+		console.log("error: " + e);
+		MRE.log.error("app", e);
 	}
 
 	/**
@@ -243,7 +303,7 @@ export default class DojoShirt {
 			return;
 		}
 
-		// Create the model and attach it to the avatar's head.
+		// Create the model and attach it to the avatar
 		this.attachedShirts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {
 			prefab: this.prefabs[assetId],
 			actor: {
@@ -265,8 +325,20 @@ export default class DojoShirt {
 		}));
 	}
 
+	/*
+	Removes assests associated with the user
+	*/
+	private removeUserAssets(map: Map<MRE.Guid, MRE.Actor>, user: MRE.User) {
+		if(map.has(user.id)){
+			map.get(user.id).destroy();
+		}
+		map.delete(user.id);
+	}
+
 	private removeAssets(user: MRE.User) {
-		if (this.attachedShirts.has(user.id)) { this.attachedShirts.get(user.id).destroy(); }
-		this.attachedShirts.delete(user.id);
+		// remove any attached shirts
+		console.log("Removing assets for user [" + user.id + "]: " + user.name); 
+		this.removeUserAssets(this.attachedShirts, user);
+		this.removeUserAssets(this.assignedBelts, user);
 	}
 }

@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { number } from 'yargs';
 
 /**
  * Shirt db entry
@@ -86,6 +87,10 @@ export default class DojoShirt {
 
 	// Container for dojo belt user assignment
 	private assignedBelts = new Map<MRE.Guid, MRE.Actor>();
+
+	// track the user levels 
+	private userLevels = new Map<MRE.Guid, number>();
+
 
 	/**
 	 * Constructs a new instance of this class.
@@ -211,7 +216,7 @@ export default class DojoShirt {
 				parentId: menu.id,
 				name: 'label',
 				text: {
-					contents: ''.padStart(8, ' ') + "Wear a Shirt",
+					contents: ''.padStart(8, ' ') + "Select a Shirt",
 					height: 0.8,
 					anchor: MRE.TextAnchorLocation.MiddleCenter,
 					color: MRE.Color3.Yellow()
@@ -226,7 +231,64 @@ export default class DojoShirt {
 	}
 
 	private createRewardButton() {
+		const menu = MRE.Actor.Create(this.context, {});
 
+		// Create menu button
+		const buttonMesh = this.assets.createBoxMesh('button', 1, 0.3, 0.01);
+
+		// create the level up button
+		// Create a clickable button.
+			const levelUp = MRE.Actor.Create(this.context, {
+				actor: {
+					parentId: menu.id,
+					name: "levelUp",
+					appearance: { meshId: buttonMesh.id },
+					collider: { geometry: { shape: MRE.ColliderType.Auto } },
+					transform: {
+						local: { position: { x: 0, y:0, z: 0 } }
+					}
+				}
+			});
+
+			// Set a click handler on the button.
+			levelUp.setBehavior(MRE.ButtonBehavior)
+				.onClick(user => this.incrementLevel(1, user));
+
+			// Create a label for the menu entry.
+			MRE.Actor.Create(this.context, {
+				actor: {
+					parentId: menu.id,
+					name: 'label',
+					text: {
+						contents: "Level Up",
+						height: 0.5,
+						anchor: MRE.TextAnchorLocation.MiddleLeft
+					},
+					transform: {
+						local: { position: { x: 0.5, y:0, z: 0 } }
+					}
+				}
+			});
+	}
+
+	private incrementLevel(increment: number, user:MRE.User ) {
+		let level = 0;
+		const belts = Object.keys(BeltsDB.belts);
+
+		// get the current level 
+		if(this.userLevels.has(user.id)) {
+			level = this.userLevels.get(user.id);
+		}
+
+		level += increment;
+
+		if(increment < 0 || increment > belts.length){
+			console.log("Max / Min level reached: " + user.name + ", level: " + level);
+		} else {
+			const belt = belts[level].valueOf();
+			
+			this.userLevels.set(user.id, level);
+		}
 	}
 
 	/**

@@ -18,5 +18,10 @@
       "displayName": "T-Shirt White",
       "resourceName": "tshirt-white.glb",
       "transform": "shirt"
+    },
+    "dojo-gi": {
+      "displayName": "Dojo Gi",
+      "resourceName": "dojo-gi.glb",
+      "transform": "gi-low-poly"
     }
   }

@@ -14,6 +14,18 @@ type ShirtDescriptor = {
 	transform: string;
 };
 
+/**
+ * ShirtDB entry
+ */
+type BeltOrderDescriptor = {
+	order: number;
+	resourceName: string;
+};
+
+type BeltDescriptor = {
+	[key: string]: BeltOrderDescriptor;
+};
+
 /*
 asset transforms
 */
@@ -43,12 +55,20 @@ type ShirtDatabase = {
 	[key: string]: ShirtDescriptor;
 };
 
+type BeltsDB = {
+	belts: BeltDescriptor;
+	transform: string;
+};
+
 type TransformsDB = {
 	[key: string]: TransformDescriptor;
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BeltsDB: BeltsDB = require('../public/belts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const TransformsDB: TransformsDB = require('../public/transforms.json'); 
@@ -60,8 +80,16 @@ export default class DojoShirt {
 	// Container for preloaded dojo-shirt prefabs.
 	private assets: MRE.AssetContainer;
 	private prefabs: { [key: string]: MRE.Prefab } = {};
+
 	// Container for instantiated dojo shirt assets.
 	private attachedShirts = new Map<MRE.Guid, MRE.Actor>();
+
+	// Container for dojo belt user assignment
+	private assignedBelts = new Map<MRE.Guid, MRE.Actor>();
+
+	// track the user levels 
+	private userLevels = new Map<MRE.Guid, number>();
+
 
 	/**
 	 * Constructs a new instance of this class.
@@ -113,8 +141,14 @@ export default class DojoShirt {
 	private startedImpl = async () => {
 		// Preload all the models.
 		await this.preloadShirts();
+
+		await this.preloadBelts();
+
 		// Show the menu.
 		this.showShirtsMenu();
+
+		// create the rewards button
+		this.createRewardButton();
 	}
 
 	/**
@@ -181,7 +215,7 @@ export default class DojoShirt {
 				parentId: menu.id,
 				name: 'label',
 				text: {
-					contents: ''.padStart(8, ' ') + "Wear a Shirt",
+					contents: ''.padStart(8, ' ') + "Select a Shirt",
 					height: 0.8,
 					anchor: MRE.TextAnchorLocation.MiddleCenter,
 					color: MRE.Color3.Yellow()
@@ -193,6 +227,109 @@ export default class DojoShirt {
 		});
 
 		console.log("TShirt menu created");
+	}
+
+	private createRewardButton() {
+		const menu = MRE.Actor.Create(this.context, {});
+		const anchorX = 4;
+		const anchorY = 2.5;
+
+		// Create menu button
+		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
+
+		// create the level up button
+		// Create a clickable button.
+		const levelUp = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: "levelUp",
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: anchorX, y:anchorY, z: 0 } }
+				}
+			}
+		});
+
+		const levelDown = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: "levelDown",
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: anchorX, y:anchorY - 0.5, z: 0 } }
+				}
+			}
+		});
+
+		// Set a click handler on the button.
+		levelUp.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.incrementLevel(1, user));
+		levelDown.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.incrementLevel(-1, user));
+
+		// Create a label for the menu entries
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: "Level Up",
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: anchorX + 0.5, y:anchorY, z: 0 } }
+				}
+			}
+		});
+
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: "Level Down",
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: anchorX + 0.5, y:anchorY - 0.5, z: 0 } }
+				}
+			}
+		});
+	}
+
+	/**
+	 * incrementLevel
+	 */
+	private incrementLevel(increment: number, user: MRE.User) {
+		let level = -1;
+		const belts = Object.keys(BeltsDB.belts);
+
+		// get the current level 
+		if(this.userLevels.has(user.id)) {
+			level = this.userLevels.get(user.id);
+		}
+
+		level += increment;
+
+		// apply the belt to the user
+		if(level < 0) {
+			console.log("Min level reached: " + user.name + ", level: " + level);
+			this.userLevels.delete(user.id);
+			this.removeUserAssets(this.assignedBelts, user);
+		} else if (level > belts.length) {
+			console.log("Max level reached: " + user.name + ", level: " + level);
+		} else {
+			const belt = belts[level].valueOf();
+			const beltKey = belts[level];
+
+			console.log("Setting user level " + user.name + ", level: " + level + ", belt: " + beltKey);
+			this.userLevels.set(user.id, level);
+			this.wearBelt(beltKey, user);
+		}
 	}
 
 	/**
@@ -207,15 +344,47 @@ export default class DojoShirt {
 			Object.keys(ShirtDatabase).map(shirtId => {
 				const asset = ShirtDatabase[shirtId];
 				if (asset.resourceName) {
-					return this.assets.loadGltf(asset.resourceName)
-						.then(assets => {
-							this.prefabs[shirtId] = assets.find(a => a.prefab !== null) as MRE.Prefab;
-						})
-						.catch(e => MRE.log.error("app", e));
+					return this.preloadAsset(shirtId, asset.resourceName);					
 				} else {
 					return Promise.resolve();
 				}
 			}));
+	}
+
+	/**
+	 * preload the dojo belt assets 
+	 */
+	private preloadBelts() {
+		return Promise.all(
+			Object.keys(BeltsDB.belts).map(beltId => {
+				const belt = BeltsDB.belts[beltId];
+				return this.preloadAsset(beltId, belt.resourceName);				
+			})
+		);
+	}
+
+	/**
+	 * preloads asset into the local prefabs
+	 */
+
+	private preloadAsset(id: string, filename: string){
+		console.log("pre-loading asset[" + id + "]: " + filename);
+		return this.assets.loadGltf(filename)
+			.then(assets => {
+				console.log(id + " loaded");
+				this.prefabs[id] = assets.find(a => a.prefab !== null) as MRE.Prefab;
+			})
+			.catch(e => {
+				this.logError(e);
+			});
+	}
+
+	/**
+	 * generic error logging
+	 */
+	private logError(e: any){
+		console.log("error: " + e);
+		MRE.log.error("app", e);
 	}
 
 	/**
@@ -228,7 +397,7 @@ export default class DojoShirt {
 		// console.log("Assigning shirt " + shirtId + " to user " + user.name + "(" + user.id + ")");
 
 		// If the user is wearing an asset, destroy it.
-		this.removeAssets(this.context.user(userId));
+		this.removeUserAssets(this.attachedShirts, this.context.user(userId));
 
 		const shirtRecord = ShirtDatabase[assetId];
 		const transformRecord = TransformsDB[shirtRecord.transform];
@@ -238,7 +407,7 @@ export default class DojoShirt {
 			return;
 		}
 
-		// Create the model and attach it to the avatar's head.
+		// Create the model and attach it to the avatar
 		this.attachedShirts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {
 			prefab: this.prefabs[assetId],
 			actor: {
@@ -260,8 +429,54 @@ export default class DojoShirt {
 		}));
 	}
 
+	private wearBelt(id: string, user: MRE.User) {
+		const belt = BeltsDB.belts[id];
+		const transformRecord = TransformsDB[BeltsDB.transform];
+		const userId = user.id;
+
+		console.log("assigning belt: " + id + " to user: " + user.name);
+
+		// If the user is wearing aa belt, destroy it.
+		this.removeUserAssets(this.assignedBelts, user);
+
+		// Create the model and attach it to the avatar
+		this.assignedBelts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {
+			prefab: this.prefabs[id],
+			actor: {
+				transform: {
+					local: {
+						position: transformRecord.position,
+						rotation: MRE.Quaternion.FromEulerAngles(
+							transformRecord.rotation.x * MRE.DegreesToRadians,
+							transformRecord.rotation.y * MRE.DegreesToRadians,
+							transformRecord.rotation.z * MRE.DegreesToRadians),
+						scale: transformRecord.scale,
+					}
+				},
+				attachment: {
+					attachPoint: transformRecord.attachPoint as MRE.AttachPoint,
+					userId
+				}
+			}
+		}));
+	}
+
+	/*
+	Removes assests associated with the user
+	*/
+	private removeUserAssets(map: Map<MRE.Guid, MRE.Actor>, user: MRE.User) {
+		console.log("removeUserAssets for[" + user.id + "]: " + user.name);
+
+		if(map.has(user.id)){
+			map.get(user.id).destroy();
+		}
+		map.delete(user.id);
+	}
+
 	private removeAssets(user: MRE.User) {
-		if (this.attachedShirts.has(user.id)) { this.attachedShirts.get(user.id).destroy(); }
-		this.attachedShirts.delete(user.id);
+		// remove any attached shirts
+		console.log("Removing assets for user [" + user.id + "]: " + user.name); 
+		this.removeUserAssets(this.attachedShirts, user);
+		this.removeUserAssets(this.assignedBelts, user);
 	}
 }

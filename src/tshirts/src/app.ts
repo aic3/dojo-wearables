@@ -4,7 +4,6 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { number } from 'yargs';
 
 /**
  * Shirt db entry
@@ -232,47 +231,81 @@ export default class DojoShirt {
 
 	private createRewardButton() {
 		const menu = MRE.Actor.Create(this.context, {});
+		const anchorX = 4;
+		const anchorY = 2.5;
 
 		// Create menu button
-		const buttonMesh = this.assets.createBoxMesh('button', 1, 0.3, 0.01);
+		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
 
 		// create the level up button
 		// Create a clickable button.
-			const levelUp = MRE.Actor.Create(this.context, {
-				actor: {
-					parentId: menu.id,
-					name: "levelUp",
-					appearance: { meshId: buttonMesh.id },
-					collider: { geometry: { shape: MRE.ColliderType.Auto } },
-					transform: {
-						local: { position: { x: 0, y:0, z: 0 } }
-					}
+		const levelUp = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: "levelUp",
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: anchorX, y:anchorY, z: 0 } }
 				}
-			});
+			}
+		});
 
-			// Set a click handler on the button.
-			levelUp.setBehavior(MRE.ButtonBehavior)
-				.onClick(user => this.incrementLevel(1, user));
-
-			// Create a label for the menu entry.
-			MRE.Actor.Create(this.context, {
-				actor: {
-					parentId: menu.id,
-					name: 'label',
-					text: {
-						contents: "Level Up",
-						height: 0.5,
-						anchor: MRE.TextAnchorLocation.MiddleLeft
-					},
-					transform: {
-						local: { position: { x: 0.5, y:0, z: 0 } }
-					}
+		const levelDown = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: "levelDown",
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: anchorX, y:anchorY - 0.5, z: 0 } }
 				}
-			});
+			}
+		});
+
+		// Set a click handler on the button.
+		levelUp.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.incrementLevel(1, user));
+		levelDown.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.incrementLevel(-1, user));
+
+		// Create a label for the menu entries
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: "Level Up",
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: anchorX + 0.5, y:anchorY, z: 0 } }
+				}
+			}
+		});
+
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: "Level Down",
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: anchorX + 0.5, y:anchorY - 0.5, z: 0 } }
+				}
+			}
+		});
 	}
 
-	private incrementLevel(increment: number, user:MRE.User ) {
-		let level = 0;
+	/**
+	 * incrementLevel
+	 */
+	private incrementLevel(increment: number, user: MRE.User) {
+		let level = -1;
 		const belts = Object.keys(BeltsDB.belts);
 
 		// get the current level 
@@ -282,12 +315,20 @@ export default class DojoShirt {
 
 		level += increment;
 
-		if(increment < 0 || increment > belts.length){
-			console.log("Max / Min level reached: " + user.name + ", level: " + level);
+		// apply the belt to the user
+		if(level < 0) {
+			console.log("Min level reached: " + user.name + ", level: " + level);
+			this.userLevels.delete(user.id);
+			this.removeUserAssets(this.assignedBelts, user);
+		} else if (level > belts.length) {
+			console.log("Max level reached: " + user.name + ", level: " + level);
 		} else {
 			const belt = belts[level].valueOf();
-			
+			const beltKey = belts[level];
+
+			console.log("Setting user level " + user.name + ", level: " + level + ", belt: " + beltKey);
 			this.userLevels.set(user.id, level);
+			this.wearBelt(beltKey, user);
 		}
 	}
 
@@ -356,7 +397,7 @@ export default class DojoShirt {
 		// console.log("Assigning shirt " + shirtId + " to user " + user.name + "(" + user.id + ")");
 
 		// If the user is wearing an asset, destroy it.
-		this.removeAssets(this.context.user(userId));
+		this.removeUserAssets(this.attachedShirts, this.context.user(userId));
 
 		const shirtRecord = ShirtDatabase[assetId];
 		const transformRecord = TransformsDB[shirtRecord.transform];
@@ -388,10 +429,44 @@ export default class DojoShirt {
 		}));
 	}
 
+	private wearBelt(id: string, user: MRE.User) {
+		const belt = BeltsDB.belts[id];
+		const transformRecord = TransformsDB[BeltsDB.transform];
+		const userId = user.id;
+
+		console.log("assigning belt: " + id + " to user: " + user.name);
+
+		// If the user is wearing aa belt, destroy it.
+		this.removeUserAssets(this.assignedBelts, user);
+
+		// Create the model and attach it to the avatar
+		this.assignedBelts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {
+			prefab: this.prefabs[id],
+			actor: {
+				transform: {
+					local: {
+						position: transformRecord.position,
+						rotation: MRE.Quaternion.FromEulerAngles(
+							transformRecord.rotation.x * MRE.DegreesToRadians,
+							transformRecord.rotation.y * MRE.DegreesToRadians,
+							transformRecord.rotation.z * MRE.DegreesToRadians),
+						scale: transformRecord.scale,
+					}
+				},
+				attachment: {
+					attachPoint: transformRecord.attachPoint as MRE.AttachPoint,
+					userId
+				}
+			}
+		}));
+	}
+
 	/*
 	Removes assests associated with the user
 	*/
 	private removeUserAssets(map: Map<MRE.Guid, MRE.Actor>, user: MRE.User) {
+		console.log("removeUserAssets for[" + user.id + "]: " + user.name);
+
 		if(map.has(user.id)){
 			map.get(user.id).destroy();
 		}

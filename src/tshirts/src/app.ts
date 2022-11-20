@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import fetch from "node-fetch";
 
 /**
  * Shirt db entry
@@ -90,6 +91,8 @@ export default class DojoShirt {
 	// track the user levels 
 	private userLevels = new Map<MRE.Guid, number>();
 
+	// settings endpoint
+	private settingsEndpoint = "https://xyz.com";
 
 	/**
 	 * Constructs a new instance of this class.
@@ -102,6 +105,7 @@ export default class DojoShirt {
 		// Hook the context events we're interested npm buildin.
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
+		this.context.onUserJoined(user => this.userJoined(user));
 	}
 
 	/**
@@ -127,6 +131,9 @@ export default class DojoShirt {
 
 		// version to use with async code
 		if (isDebug) {
+			// use the local settings endpoint
+			this.settingsEndpoint = "http://localhost:7071";
+
 			await new Promise(resolve => setTimeout(resolve, delay));
 			await this.startedImpl();
 		} else {
@@ -159,6 +166,44 @@ export default class DojoShirt {
 		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
 		this.removeAssets(user);
+	}
+
+	/**
+	 * Called when a user joins the app
+	 * @param user 
+	 */
+	private userJoined(user: MRE.User) {
+		console.log("User [" + user.id + "]: " + user.name + " joined");
+		this.loadUserSettings(user);
+	}
+
+	/**
+	 * load the user settings
+	 * @param user 
+	 */
+	private loadUserSettings(user: MRE.User) {
+		console.log("loading user setitngs for : " + user.name + " ,using endpoint: " + this.settingsEndpoint);
+		const debugString = this.callUserSettingsAPI(user);
+
+		console.log("user API returned: " + debugString);
+	}
+
+	/**
+	 * call the users setitngs API
+	 * @param user 
+	 * @returns 
+	 */
+	private callUserSettingsAPI(user: MRE.User){
+		return fetch(this.settingsEndpoint + "/api/GetDojoUserSettings", {
+			method: "GET",
+			headers: {
+				"key1": "value1"
+			}
+		})
+		.then((response) => response.json())
+		.then((response) => {
+			return response as string;
+		});
 	}
 
 	/**

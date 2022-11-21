@@ -37,3 +37,8 @@ stages:
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
         buildContext: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/'
+    - task: AzureFunctionAppContainer@1
+      inputs:
+        azureSubscription: 'Microsoft Partner Network (50047d52-45c4-41b0-b54e-3b058da08cf9)'
+        appName: 'dojoapps-usr-attrb-svc'
+        imageName: 'dojoappsattrsvc'

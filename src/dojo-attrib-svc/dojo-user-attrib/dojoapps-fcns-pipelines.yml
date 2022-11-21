@@ -21,6 +21,7 @@ variables:
   vmImageName: 'ubuntu-latest'
 
 stages:
+# build the container
 - stage: Build
   displayName: Build and push stage
   jobs:  

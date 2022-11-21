@@ -21,7 +21,7 @@
     },
     "dojo-gi": {
       "displayName": "Dojo Gi",
-      "resourceName": "dojo-gi.glb",
+      "resourceName": "dojo-gi-logo.glb",
       "transform": "gi-low-poly"
     }
   }

@@ -4,7 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import fetch from "node-fetch";
+import fetch, { BodyInit, HeaderInit, RequestInit } from "node-fetch";
 
 /**
  * Shirt db entry
@@ -65,6 +65,13 @@ type TransformsDB = {
 	[key: string]: TransformDescriptor;
 };
 
+type UserSettings  = {
+	id: string;
+	name: string;
+	shirt: string;
+	belt: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
@@ -92,7 +99,7 @@ export default class DojoShirt {
 	private userLevels = new Map<MRE.Guid, number>();
 
 	// settings endpoint
-	private settingsEndpoint = "https://xyz.com";
+	private settingsEndpoint = "http://localhost:7071"; // "https://xyz.com";
 
 	/**
 	 * Constructs a new instance of this class.
@@ -172,38 +179,53 @@ export default class DojoShirt {
 	 * Called when a user joins the app
 	 * @param user 
 	 */
-	private userJoined(user: MRE.User) {
+	private async userJoined(user: MRE.User) {
 		console.log("User [" + user.id + "]: " + user.name + " joined");
-		this.loadUserSettings(user);
+		await this.loadUserSettings(user);
 	}
 
 	/**
 	 * load the user settings
 	 * @param user 
 	 */
-	private loadUserSettings(user: MRE.User) {
+	private async loadUserSettings(user: MRE.User) {
 		console.log("loading user setitngs for : " + user.name + " ,using endpoint: " + this.settingsEndpoint);
-		const debugString = this.callUserSettingsAPI(user);
+		//const debugString = this.callUserSettingsAPI(user);
 
-		console.log("user API returned: " + debugString);
+		const userSettings = await this.apiCall<UserSettings>(
+			this.settingsEndpoint + "/api/usersettings",
+			"POST",
+			null,
+			JSON.stringify( {
+				"id": user.id.toString()
+			}));
+		
+		console.log("user API returned: " +  JSON.stringify(userSettings));
 	}
 
 	/**
-	 * call the users setitngs API
-	 * @param user 
+	 * api call with json unwrapping
+	 * ref: ref: https://stackoverflow.com/questions/41103360/how-to-use-fetch-in-typescript
+	 * @param uri 
+	 * @param method 
+	 * @param headers 
 	 * @returns 
 	 */
-	private callUserSettingsAPI(user: MRE.User){
-		return fetch(this.settingsEndpoint + "/api/GetDojoUserSettings", {
-			method: "GET",
-			headers: {
-				"key1": "value1"
-			}
+	private async apiCall<T>(uri: string, method = "GET", headers: HeaderInit = null, body:  string = null){
+		return await fetch(uri, {
+			method: method,
+			headers: headers,
+			body:body
 		})
-		.then((response) => response.json())
 		.then((response) => {
-			return response as string;
-		});
+			if(!response.ok){
+				throw new Error(response.statusText);
+			}
+			return response.json() as Promise<{ data: T }>;
+		})
+		.then((data) => {
+			return data;
+		}); 
 	}
 
 	/**

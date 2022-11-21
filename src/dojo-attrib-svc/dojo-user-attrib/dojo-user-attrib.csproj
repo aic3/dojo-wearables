@@ -2,7 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-    <RootNamespace>dojo_user_attrib</RootNamespace>
+    <RootNamespace>DevOpsDojo.Users.Functions</RootNamespace>
+    <AssemblyName>DevOpsDojo.Users.Functions</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />

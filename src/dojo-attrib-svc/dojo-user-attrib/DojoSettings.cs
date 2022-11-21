@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using DevOpsDojo.Users.Functions.Settings;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -8,7 +9,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace DevOpsDojo.Users.Fnuctions
+namespace DevOpsDojo.Users.Functions
 {
     public class DojoSettings
     {
@@ -20,7 +21,7 @@ namespace DevOpsDojo.Users.Fnuctions
         }
 
         [FunctionName("GetDojoUserSettings")]
-        public async Task<IActionResult> GetDojoUserSettingsFunc(
+        public async Task<IActionResult> GetDojoUserSettingsFuncDev(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
@@ -42,8 +43,39 @@ namespace DevOpsDojo.Users.Fnuctions
         public async Task<IActionResult> EchoFunc(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
+
+            UserSettings settings = new UserSettings()
+            {
+                Id = "000-000-000",
+                Name = "Sample user",
+                Shirt = "red",
+                Belt = "dojo-gi"
+            };
             // string 
             return null;
+        }
+
+        [FunctionName("UserSettings")]
+        public async Task<IActionResult> GetUserSettings(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req){
+            string body = await new StreamReader(req.Body).ReadToEndAsync();
+            
+            // get the settings request
+            UserSettings settingsInput = JsonConvert.DeserializeObject<UserSettings>(body);
+
+            // get the id
+            string id = settingsInput.Id;
+
+
+            UserSettings settings = new UserSettings()
+            {
+                Id = settingsInput.Id + " output",
+                Name = "Sample user",
+                Shirt = "red",
+                Belt = "dojo-gi"
+            };
+            // string 
+            return new OkObjectResult(settings);
         }
     }
 }

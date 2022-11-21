@@ -9,11 +9,32 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '7bea5c04-127f-4d9c-895c-ff149edac736'
+  imageRepository: 'dojoappsattrsvc'
+  containerRegistry: 'dojoapps.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/dojo-user-attrib//Dockerfile'
+  tag: '$(Build.BuildNumber)'
+  
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        #tags: |
+          #$(tag)

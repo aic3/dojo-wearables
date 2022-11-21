@@ -23,7 +23,7 @@ variables:
 stages:
 - stage: Build
   displayName: Build and push stage
-  jobs:  
+  jobs:
   - job: Build
     displayName: Build
     pool:
@@ -36,5 +36,4 @@ stages:
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
-        #tags: |
-          #$(tag)
+        buildContext: /src/dojo-attrib-svc/

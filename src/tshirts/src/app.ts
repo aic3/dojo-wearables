@@ -231,6 +231,9 @@ export default class DojoShirt {
 		})
 		.then((data) => {
 			return data;
+		})
+		.catch((reason) => {
+			console.log("error calling: " + uri + ", message: " + reason);
 		}); 
 	}
 

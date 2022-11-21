@@ -4,7 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import fetch, { BodyInit, HeaderInit, RequestInit } from "node-fetch";
+import fetch, { BodyInit, HeaderInit, Headers, RequestInit } from "node-fetch";
 
 /**
  * Shirt db entry
@@ -99,7 +99,7 @@ export default class DojoShirt {
 	private userLevels = new Map<MRE.Guid, number>();
 
 	// settings endpoint
-	private settingsEndpoint = "http://localhost:7071"; // "https://xyz.com";
+	private settingsEndpoint = "https://dojoapps-usr-attrb-svc.azurewebsites.net"; // "https://xyz.com";
 
 	/**
 	 * Constructs a new instance of this class.
@@ -190,10 +190,10 @@ export default class DojoShirt {
 	 */
 	private async loadUserSettings(user: MRE.User) {
 		console.log("loading user setitngs for : " + user.name + " ,using endpoint: " + this.settingsEndpoint);
-		//const debugString = this.callUserSettingsAPI(user);
+		//const debugString = this.callUserSettingsAPI(user);		
 
 		const userSettings = await this.apiCall<UserSettings>(
-			this.settingsEndpoint + "/api/usersettings",
+			this.settingsEndpoint + "/api/getusersettings",
 			"POST",
 			null,
 			JSON.stringify( {
@@ -211,7 +211,13 @@ export default class DojoShirt {
 	 * @param headers 
 	 * @returns 
 	 */
-	private async apiCall<T>(uri: string, method = "GET", headers: HeaderInit = null, body:  string = null){
+	private async apiCall<T>(uri: string, method = "GET", headers: Headers = null, body:  string = null){
+		const funcKey = process.env["X_FUNCTIONS_KEY"];
+		if(headers === null){
+			headers = new Headers();
+		}
+		headers.append("x-functions-key", funcKey);
+
 		return await fetch(uri, {
 			method: method,
 			headers: headers,
@@ -415,7 +421,8 @@ export default class DojoShirt {
 				} else {
 					return Promise.resolve();
 				}
-			}));
+			})
+		);
 	}
 
 	/**

@@ -4,6 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import fetch, { BodyInit, HeaderInit, RequestInit } from "node-fetch";
 
 /**
  * Shirt db entry
@@ -64,6 +65,13 @@ type TransformsDB = {
 	[key: string]: TransformDescriptor;
 };
 
+type UserSettings  = {
+	id: string;
+	name: string;
+	shirt: string;
+	belt: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
@@ -90,6 +98,8 @@ export default class DojoShirt {
 	// track the user levels 
 	private userLevels = new Map<MRE.Guid, number>();
 
+	// settings endpoint
+	private settingsEndpoint = "http://localhost:7071"; // "https://xyz.com";
 
 	/**
 	 * Constructs a new instance of this class.
@@ -102,6 +112,7 @@ export default class DojoShirt {
 		// Hook the context events we're interested npm buildin.
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
+		this.context.onUserJoined(user => this.userJoined(user));
 	}
 
 	/**
@@ -127,6 +138,9 @@ export default class DojoShirt {
 
 		// version to use with async code
 		if (isDebug) {
+			// use the local settings endpoint
+			this.settingsEndpoint = "http://localhost:7071";
+
 			await new Promise(resolve => setTimeout(resolve, delay));
 			await this.startedImpl();
 		} else {
@@ -159,6 +173,59 @@ export default class DojoShirt {
 		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
 		this.removeAssets(user);
+	}
+
+	/**
+	 * Called when a user joins the app
+	 * @param user 
+	 */
+	private async userJoined(user: MRE.User) {
+		console.log("User [" + user.id + "]: " + user.name + " joined");
+		await this.loadUserSettings(user);
+	}
+
+	/**
+	 * load the user settings
+	 * @param user 
+	 */
+	private async loadUserSettings(user: MRE.User) {
+		console.log("loading user setitngs for : " + user.name + " ,using endpoint: " + this.settingsEndpoint);
+		//const debugString = this.callUserSettingsAPI(user);
+
+		const userSettings = await this.apiCall<UserSettings>(
+			this.settingsEndpoint + "/api/usersettings",
+			"POST",
+			null,
+			JSON.stringify( {
+				"id": user.id.toString()
+			}));
+		
+		console.log("user API returned: " +  JSON.stringify(userSettings));
+	}
+
+	/**
+	 * api call with json unwrapping
+	 * ref: ref: https://stackoverflow.com/questions/41103360/how-to-use-fetch-in-typescript
+	 * @param uri 
+	 * @param method 
+	 * @param headers 
+	 * @returns 
+	 */
+	private async apiCall<T>(uri: string, method = "GET", headers: HeaderInit = null, body:  string = null){
+		return await fetch(uri, {
+			method: method,
+			headers: headers,
+			body:body
+		})
+		.then((response) => {
+			if(!response.ok){
+				throw new Error(response.statusText);
+			}
+			return response.json() as Promise<{ data: T }>;
+		})
+		.then((data) => {
+			return data;
+		}); 
 	}
 
 	/**

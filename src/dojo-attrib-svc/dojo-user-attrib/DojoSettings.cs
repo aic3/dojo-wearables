@@ -72,8 +72,9 @@ namespace DevOpsDojo.Users.Functions
             TableClient tableClient = this.GetTableServiceClient();
             Pageable<UserSettings> qryResults = tableClient.Query<UserSettings>(s => s.Id == id);
 
-            settings = qryResults.FirstOrDefault();
-            
+            if (qryResults.Count() == 1) {
+                settings = qryResults.FirstOrDefault();
+            }
             return new OkObjectResult(settings);
         }
 

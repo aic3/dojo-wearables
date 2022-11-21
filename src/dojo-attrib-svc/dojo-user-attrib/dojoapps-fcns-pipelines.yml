@@ -36,4 +36,4 @@ stages:
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
-        buildContext: /src/dojo-attrib-svc/
+        buildContext: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/'

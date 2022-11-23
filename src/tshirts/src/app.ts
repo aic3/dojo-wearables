@@ -4,7 +4,9 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { settings } from 'cluster';
 import fetch, { BodyInit, HeaderInit, Headers, RequestInit } from "node-fetch";
+import { emitKeypressEvents } from 'readline';
 
 /**
  * Shirt db entry
@@ -65,7 +67,7 @@ type TransformsDB = {
 	[key: string]: TransformDescriptor;
 };
 
-type UserSettings  = {
+type UserSettings = {
 	id: string;
 	name: string;
 	shirt: string;
@@ -99,7 +101,8 @@ export default class DojoShirt {
 	private userLevels = new Map<MRE.Guid, number>();
 
 	// settings endpoint
-	private settingsEndpoint = "https://dojoapps-usr-attrb-svc.azurewebsites.net"; // "https://xyz.com";
+	private settingsEndpoint = "https://dojoapps-usr-attrb-svc.azurewebsites.net"; 
+	private userSettings = new Map<MRE.Guid, UserSettings>();
 
 	/**
 	 * Constructs a new instance of this class.
@@ -192,15 +195,37 @@ export default class DojoShirt {
 		console.log("loading user setitngs for : " + user.name + " ,using endpoint: " + this.settingsEndpoint);
 		//const debugString = this.callUserSettingsAPI(user);		
 
-		const userSettings = await this.apiCall<UserSettings>(
+		const apiSet = await this.apiCall<UserSettings>(
 			this.settingsEndpoint + "/api/getusersettings",
 			"POST",
 			null,
 			JSON.stringify( {
 				"id": user.id.toString()
-			}));
+			})
+		);
+
+		// convert the promise
+		const s = JSON.stringify(apiSet);
+		const settings = JSON.parse(s) as UserSettings;
+
+		// set the user settings
+		this.userSettings.set(user.id, settings);
+
+		console.log("user API returned: " +  JSON.stringify(settings));
+	}
+
+	/**
+	 * saves the current users settings
+	 * @param settings 
+	 */
+	private async saveUserSettings(settings: UserSettings){
+		const userSettings = await this.apiCall<UserSettings>(
+			this.settingsEndpoint + "/api/getusersettings",
+			"POST",
+			null,
+			JSON.stringify(settings));
+
 		
-		console.log("user API returned: " +  JSON.stringify(userSettings));
 	}
 
 	/**
@@ -383,6 +408,7 @@ export default class DojoShirt {
 	private incrementLevel(increment: number, user: MRE.User) {
 		let level = -1;
 		const belts = Object.keys(BeltsDB.belts);
+		let beltKey = null;
 
 		// get the current level 
 		if(this.userLevels.has(user.id)) {
@@ -398,14 +424,18 @@ export default class DojoShirt {
 			this.removeUserAssets(this.assignedBelts, user);
 		} else if (level > belts.length) {
 			console.log("Max level reached: " + user.name + ", level: " + level);
+			beltKey = belts[belts.length - 1];
 		} else {
-			const belt = belts[level].valueOf();
-			const beltKey = belts[level];
+			beltKey = belts[level];
 
 			console.log("Setting user level " + user.name + ", level: " + level + ", belt: " + beltKey);
 			this.userLevels.set(user.id, level);
 			this.wearBelt(beltKey, user);
 		}
+
+		const uset = this.userSettings.get(user.id);
+		uset.belt = beltKey;
+		this.userSettings.set(user.id, uset);
 	}
 
 	/**
@@ -483,6 +513,10 @@ export default class DojoShirt {
 		if (!shirtRecord.resourceName) {
 			return;
 		}
+
+		const uset = this.userSettings.get(userId);
+		uset.shirt = assetId;
+		this.userSettings.set(userId, uset);
 
 		// Create the model and attach it to the avatar
 		this.attachedShirts.set(userId, MRE.Actor.CreateFromPrefab(this.context, {

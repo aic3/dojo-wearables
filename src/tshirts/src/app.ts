@@ -4,9 +4,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { settings } from 'cluster';
-import fetch, { BodyInit, HeaderInit, Headers, RequestInit } from "node-fetch";
-import { emitKeypressEvents } from 'readline';
+import fetch, { Headers } from "node-fetch";
 
 /**
  * Shirt db entry
@@ -71,7 +69,7 @@ type UserSettings = {
 	id: string;
 	name: string;
 	shirt: string;
-	belt: string;
+	level: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -129,8 +127,10 @@ export default class DojoShirt {
 		// You may need to increase the delay or be able to decrease it depending
 		// on the speed of your PC.
 		const delay = 1000;
-		const argv = process.execArgv.join();
-		const isDebug = argv.includes('inspect') || argv.includes('debug');
+		const execArgv = process.execArgv.join();
+		const argv = process.argv.join();
+		const isDebug = argv.includes('inspect') || argv.includes('debug') 
+			|| execArgv.includes('inspect') || execArgv.includes('debug');
 
 		// // version to use with non-async code
 		// if (isDebug) {
@@ -173,6 +173,20 @@ export default class DojoShirt {
 	 * @param user The user that left the building.
 	 */
 	private userLeft(user: MRE.User) {
+		// save the user settings
+		const settings = this.userSettings.get(user.id);
+		if(settings !== null){
+			// add the username if needed
+			if(settings.name === null){
+				settings.name = user.name;
+			}
+
+			this.saveUserSettings(settings)
+			.then(function(success){
+				console.log("[" + user.id + "|" + user.name + "]: settings saved");
+			});
+		}
+
 		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
 		this.removeAssets(user);
@@ -208,6 +222,9 @@ export default class DojoShirt {
 		const s = JSON.stringify(apiSet);
 		const settings = JSON.parse(s) as UserSettings;
 
+		if(settings.name === null){
+			settings.name = user.name;
+		}
 		// set the user settings
 		this.userSettings.set(user.id, settings);
 
@@ -219,13 +236,15 @@ export default class DojoShirt {
 	 * @param settings 
 	 */
 	private async saveUserSettings(settings: UserSettings){
+		const endpoint = this.settingsEndpoint + "/api/setusersettings";
+		console.log("Saving user settings [" + endpoint + "]: " + JSON.stringify(settings));
+
+		// get the current settings		
 		const userSettings = await this.apiCall<UserSettings>(
-			this.settingsEndpoint + "/api/getusersettings",
+			endpoint,
 			"POST",
 			null,
 			JSON.stringify(settings));
-
-		
 	}
 
 	/**
@@ -237,7 +256,7 @@ export default class DojoShirt {
 	 * @returns 
 	 */
 	private async apiCall<T>(uri: string, method = "GET", headers: Headers = null, body:  string = null){
-		const funcKey = process.env["X_FUNCTIONS_KEY"];
+		const funcKey = process.env["X-FUNCTIONS-KEY"];
 		if(headers === null){
 			headers = new Headers();
 		}
@@ -409,6 +428,7 @@ export default class DojoShirt {
 		let level = -1;
 		const belts = Object.keys(BeltsDB.belts);
 		let beltKey = null;
+		const settings = this.userSettings.get(user.id);
 
 		// get the current level 
 		if(this.userLevels.has(user.id)) {
@@ -422,9 +442,15 @@ export default class DojoShirt {
 			console.log("Min level reached: " + user.name + ", level: " + level);
 			this.userLevels.delete(user.id);
 			this.removeUserAssets(this.assignedBelts, user);
+			
+			// min level
+			level = -1;
 		} else if (level > belts.length) {
 			console.log("Max level reached: " + user.name + ", level: " + level);
 			beltKey = belts[belts.length - 1];
+
+			// max level
+			level = belts.length - 1;
 		} else {
 			beltKey = belts[level];
 
@@ -433,9 +459,9 @@ export default class DojoShirt {
 			this.wearBelt(beltKey, user);
 		}
 
-		const uset = this.userSettings.get(user.id);
-		uset.belt = beltKey;
-		this.userSettings.set(user.id, uset);
+		// update the user settings
+		settings.level = level;
+		this.userSettings.set(user.id, settings);
 	}
 
 	/**

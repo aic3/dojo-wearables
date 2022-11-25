@@ -17,8 +17,8 @@ namespace DevOpsDojo.Users.Functions.Settings
         public string? Name { get; set; }
         [JsonProperty("shirt")]
         public string? Shirt { get; set; }
-        [JsonProperty("belt")]
-        public string? Belt { get; set; }
+        [JsonProperty("level")]
+        public int? Level { get; set; }
         [JsonIgnore]
         public string PartitionKey { get; set; }
         [JsonIgnore]

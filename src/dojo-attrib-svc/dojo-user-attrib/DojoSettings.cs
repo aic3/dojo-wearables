@@ -100,7 +100,7 @@ namespace DevOpsDojo.Users.Functions
             else
             {
                 settings.RowKey = settings.Id.ToString();
-                settings.PartitionKey = settings.Name.ToLower().Substring(0,1);                
+                settings.PartitionKey = settings.Id.ToString().ToLower().Substring(0,1);                
             }
 
             settings.Timestamp = DateTime.UtcNow;

@@ -58,3 +58,18 @@ Once you have your MRE up and running, and you've successfully spawned an instan
 ## Attribution
 
 Hat models taken from a sample in the previous AltspaceVR SDK.
+
+## Running local container debugging
+
+### Build locally
+
+```cmd
+docker build . -t dojo-tshirt  
+```
+
+### Run the local container
+
+```cmd
+docker run -it --rm  --name dojo-tshirt -p 3901:3901 -e X-FUNCTIONS-KEY={key to azure functions} dojo-tshirt
+```
+

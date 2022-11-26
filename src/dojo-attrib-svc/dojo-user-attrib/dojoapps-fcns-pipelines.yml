@@ -14,17 +14,16 @@ variables:
   dockerRegistryServiceConnection: '7bea5c04-127f-4d9c-895c-ff149edac736'
   imageRepository: 'dojoappsattrsvc'
   containerRegistry: 'dojoapps.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/dojo-user-attrib//Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/dojo-user-attrib/Dockerfile'
   tag: '$(Build.BuildNumber)'
   
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
 
 stages:
-# build the container
 - stage: Build
   displayName: Build and push stage
-  jobs:  
+  jobs:
   - job: Build
     displayName: Build
     pool:
@@ -37,5 +36,4 @@ stages:
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
-        #tags: |
-          #$(tag)
+        buildContext: '$(Build.SourcesDirectory)/src/dojo-attrib-svc/'

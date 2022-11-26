@@ -372,6 +372,8 @@ export default class DojoShirt {
 			y = y + 0.5;
 		}
 
+		// create the clear button
+
 		// Create a label for the menu title.
 		MRE.Actor.Create(this.context, {
 			actor: {
@@ -399,12 +401,12 @@ export default class DojoShirt {
 		const menu = MRE.Actor.Create(this.context, {});
 		const anchorX = 4;
 		const anchorY = 2.5;
+		const belts = Object.keys(BeltsDB.belts);
 
 		// Create menu button
 		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
 
 		// create the level up button
-		// Create a clickable button.
 		const levelUp = MRE.Actor.Create(this.context, {
 			actor: {
 				parentId: menu.id,
@@ -417,6 +419,7 @@ export default class DojoShirt {
 			}
 		});
 
+		// create the level down button
 		const levelDown = MRE.Actor.Create(this.context, {
 			actor: {
 				parentId: menu.id,
@@ -429,11 +432,28 @@ export default class DojoShirt {
 			}
 		});
 
+		// create the level clear button
+		const levelClear = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: "levelClear",
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: anchorX, y:anchorY - 1, z: 0 } }
+				}
+			}
+		});
+
 		// Set a click handler on the button.
 		levelUp.setBehavior(MRE.ButtonBehavior)
 			.onClick(user => this.incrementLevel(1, user));
 		levelDown.setBehavior(MRE.ButtonBehavior)
 			.onClick(user => this.incrementLevel(-1, user));
+		
+		// ensure the value will clear the current belt
+		levelClear.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.removeUserBelt(user));
 
 		// Create a label for the menu entries
 		MRE.Actor.Create(this.context, {
@@ -451,6 +471,7 @@ export default class DojoShirt {
 			}
 		});
 
+		// create the level down button
 		MRE.Actor.Create(this.context, {
 			actor: {
 				parentId: menu.id,
@@ -462,6 +483,60 @@ export default class DojoShirt {
 				},
 				transform: {
 					local: { position: { x: anchorX + 0.5, y:anchorY - 0.5, z: 0 } }
+				}
+			}
+		});
+
+		// Create a label for the clear button
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: "Clear",
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: anchorX + 0.5, y:anchorY - 1, z: 0 } }
+				}
+			}
+		});
+	}
+
+	private createButton(parentId: MRE.Guid, name:string, text:string, position:MRE.Vector3Like, handler: MRE.ActionHandler<MRE.ButtonEventData>) {
+		// Create menu button
+		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
+
+		// create the level up button
+		const button = MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: parentId,
+				name: name,
+				appearance: { meshId: buttonMesh.id },
+				collider: { geometry: { shape: MRE.ColliderType.Auto } },
+				transform: {
+					local: { position: { x: position.x, y:position.y, z:position.z } }
+				}
+			}
+		});
+
+		// ensure the value will clear the current belt
+		button.setBehavior(MRE.ButtonBehavior)
+			.onClick(user => this.removeUserBelt(user));
+
+		// Create a label for the  button
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: parentId,
+				name: 'label',
+				text: {
+					contents: text,
+					height: 0.5,
+					anchor: MRE.TextAnchorLocation.MiddleLeft
+				},
+				transform: {
+					local: { position: { x: position.x + 0.5, y:position.y, z:position.z } }
 				}
 			}
 		});

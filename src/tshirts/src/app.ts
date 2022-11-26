@@ -110,7 +110,7 @@ export default class DojoShirt {
 	private prefabs: { [key: string]: MRE.Prefab } = {};
 
 	// settings endpoint
-	private settingsEndpoint = "https://dojoapps-usr-attrb-svc.azurewebsites.net"; 
+	private settingsEndpoint = process.env["X_FUNCTIONS_KEY"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 
 	/**
@@ -225,7 +225,7 @@ export default class DojoShirt {
 		await this.startedImpl();
 
 		// intialize the user shirt
-		if(settings.shirt !== null && settings.shirt != undefined){
+		if(settings.shirt !== null && settings.shirt !== undefined){
 			this.logUser(user, "Intializing shirt: " + settings.shirt);
 			this.wearShirt(settings.shirt, user);
 		}

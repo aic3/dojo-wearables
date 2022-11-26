@@ -110,7 +110,7 @@ export default class DojoShirt {
 	private prefabs: { [key: string]: MRE.Prefab } = {};
 
 	// settings endpoint
-	private settingsEndpoint = process.env["X_FUNCTIONS_KEY"]; 
+	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 
 	/**

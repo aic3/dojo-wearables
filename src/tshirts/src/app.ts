@@ -225,13 +225,15 @@ export default class DojoShirt {
 		await this.startedImpl();
 
 		// intialize the user shirt
-		if(settings.shirt !== null){
+		if(settings.shirt !== null && settings.shirt != undefined){
+			this.logUser(user, "Intializing shirt: " + settings.shirt);
 			this.wearShirt(settings.shirt, user);
 		}
 
 		// initialize the user belt
 		const beltKey = this.getBeltKey(settings.level);
 		if (beltKey !== null){
+			this.logUser(user, "Initializing belt: " + beltKey);
 			this.wearBelt(beltKey, settings.level, user);
 		}
 
@@ -366,7 +368,12 @@ export default class DojoShirt {
 			"clearShirt",
 			"Clear",
 			{x:0, y:y, z:0},
-			user => this.removeUserShirt(user));
+			user => {
+				this.removeUserShirt(user);
+				const runtime = this.runtimeSettings.get(user.id);
+				runtime.settings.shirt = null;
+				this.runtimeSettings.set(user.id, runtime);
+			});
 
 		console.log("TShirt menu created");
 	}
@@ -395,7 +402,12 @@ export default class DojoShirt {
 			"cleanLevel",
 			"Clear",
 			{x:anchorX, y:anchorY - 1, z:0},
-			user => this.removeUserBelt(user));	
+			user => {
+				this.removeUserBelt(user);
+				const runtime = this.runtimeSettings.get(user.id);
+				runtime.settings.level = -1;
+				this.runtimeSettings.set(user.id, runtime);
+			});	
 	}
 
 	private createButton(parentId: MRE.Guid,
@@ -663,7 +675,6 @@ export default class DojoShirt {
 		if(runtime.belt !== null){
 			runtime.belt.destroy();
 			runtime.belt = null;
-			runtime.settings.level = -1;
 		}
 
 		this.runtimeSettings.set(user.id, runtime);
@@ -679,7 +690,6 @@ export default class DojoShirt {
 		if(runtime.shirt !== null){
 			runtime.shirt.destroy();
 			runtime.shirt = null;
-			runtime.settings.shirt = null;
 		}
 
 		this.runtimeSettings.set(user.id, runtime);

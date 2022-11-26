@@ -4,7 +4,6 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { settings } from 'cluster';
 import fetch, { Headers } from "node-fetch";
 
 /**
@@ -187,7 +186,7 @@ export default class DojoShirt {
 	private userLeft(user: MRE.User) {
 		// save the user settings
 		const runtime = this.runtimeSettings.get(user.id);
-		if(settings !== null){
+		if(runtime.settings !== null){
 			// add the username if needed
 			if(runtime.settings.name === null){
 				runtime.settings.name = user.name;
@@ -212,7 +211,7 @@ export default class DojoShirt {
 		this.logUser(user, "joined");
 
 		const settings = await this.loadUserSettings(user);
-		let runtimeSettings: RuntimeUserSettings = {
+		const runtime: RuntimeUserSettings = {
 			intialized: false,
 			settings: settings,
 			shirt: null,
@@ -220,7 +219,7 @@ export default class DojoShirt {
 		};
 
 		// set the runtime settings
-		this.runtimeSettings.set(user.id, runtimeSettings);
+		this.runtimeSettings.set(user.id, runtime);
 
 		// ensure the started implementation has finished
 		await this.startedImpl();
@@ -606,7 +605,7 @@ export default class DojoShirt {
 		}
 
 		// Create the model and attach it to the avatar
-		let runtime = this.runtimeSettings.get(user.id);
+		const runtime = this.runtimeSettings.get(user.id);
 
 		runtime.shirt = MRE.Actor.CreateFromPrefab(this.context, {
 			prefab: this.prefabs[id],
@@ -642,7 +641,7 @@ export default class DojoShirt {
 		this.removeUserBelt(user);
 
 		// Create the model and attach it to the avatar
-		let runtime = this.runtimeSettings.get(user.id);
+		const runtime = this.runtimeSettings.get(user.id);
 
 		// create the belt
 		runtime.belt = MRE.Actor.CreateFromPrefab(this.context, {
@@ -681,7 +680,7 @@ export default class DojoShirt {
 	 * @param user 
 	 */
 	private removeUserBelt(user: MRE.User){
-		let runtime = this.runtimeSettings.get(user.id);
+		const runtime = this.runtimeSettings.get(user.id);
 		this.logUser(user, "removing shirt");
 
 		if(runtime.belt !== null){
@@ -696,7 +695,7 @@ export default class DojoShirt {
 	 * removes the allocated shirt
 	 */
 	private removeUserShirt(user: MRE.User) {
-		let runtime = this.runtimeSettings.get(user.id);
+		const runtime = this.runtimeSettings.get(user.id);
 		this.logUser(user, "removing shirt");
 
 		if(runtime.shirt !== null){

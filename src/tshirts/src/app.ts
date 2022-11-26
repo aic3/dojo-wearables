@@ -301,7 +301,7 @@ export default class DojoShirt {
 	 * @returns 
 	 */
 	private async apiCall<T>(uri: string, method = "GET", headers: Headers = null, body: string = null){
-		const funcKey = process.env["X-FUNCTIONS-KEY"];
+		const funcKey = process.env["X_FUNCTIONS_KEY"];
 		if(headers === null){
 			headers = new Headers();
 		}

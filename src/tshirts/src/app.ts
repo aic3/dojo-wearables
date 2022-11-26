@@ -330,49 +330,8 @@ export default class DojoShirt {
 	private showShirtsMenu() {
 		// Create a parent object for all the menu items.
 		const menu = MRE.Actor.Create(this.context, {});
-		let y = 0.3;
-
-		// Create menu button
-		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
-
-		// Loop over the database, creating a menu item for each entry.
-		for (const shirtId of Object.keys(ShirtDatabase)) {
-			// Create a clickable button.
-			const button = MRE.Actor.Create(this.context, {
-				actor: {
-					parentId: menu.id,
-					name: shirtId,
-					appearance: { meshId: buttonMesh.id },
-					collider: { geometry: { shape: MRE.ColliderType.Auto } },
-					transform: {
-						local: { position: { x: 0, y, z: 0 } }
-					}
-				}
-			});
-
-			// Set a click handler on the button.
-			button.setBehavior(MRE.ButtonBehavior)
-				.onClick(user => this.wearShirt(shirtId, user));
-
-			// Create a label for the menu entry.
-			MRE.Actor.Create(this.context, {
-				actor: {
-					parentId: menu.id,
-					name: 'label',
-					text: {
-						contents: ShirtDatabase[shirtId].displayName,
-						height: 0.5,
-						anchor: MRE.TextAnchorLocation.MiddleLeft
-					},
-					transform: {
-						local: { position: { x: 0.5, y, z: 0 } }
-					}
-				}
-			});
-			y = y + 0.5;
-		}
-
-		// create the clear button
+		const shirts = Object.keys(ShirtDatabase);
+		let y = 2.5;
 
 		// Create a label for the menu title.
 		MRE.Actor.Create(this.context, {
@@ -386,10 +345,28 @@ export default class DojoShirt {
 					color: MRE.Color3.Yellow()
 				},
 				transform: {
-					local: { position: { x: 0.5, y: y + 0.25, z: 0 } }
+					local: { position: { x: 0.5, y: y + 0.75, z: 0 } }
 				}
 			}
 		});
+
+		// Loop over the database, creating a menu item for each entry.
+		for (const shirtId of shirts) {
+			this.createButton(menu.id,
+				shirtId,
+				ShirtDatabase[shirtId].displayName,
+				{x:0, y:y, z:0},
+				user => this.wearShirt(shirtId, user));
+
+			y = y - 0.5;
+		}
+
+		// create the clear button
+		this.createButton(menu.id,
+			"clearShirt",
+			"Clear",
+			{x:0, y:y, z:0},
+			user => this.removeUserShirt(user));
 
 		console.log("TShirt menu created");
 	}
@@ -401,110 +378,32 @@ export default class DojoShirt {
 		const menu = MRE.Actor.Create(this.context, {});
 		const anchorX = 4;
 		const anchorY = 2.5;
-		const belts = Object.keys(BeltsDB.belts);
 
-		// Create menu button
-		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
+		this.createButton(menu.id,
+			"levelUp",
+			"Level Up",
+			{x:anchorX, y:anchorY, z:0},
+			user => this.incrementLevel(1, user));
 
-		// create the level up button
-		const levelUp = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: "levelUp",
-				appearance: { meshId: buttonMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: { position: { x: anchorX, y:anchorY, z: 0 } }
-				}
-			}
-		});
-
-		// create the level down button
-		const levelDown = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: "levelDown",
-				appearance: { meshId: buttonMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: { position: { x: anchorX, y:anchorY - 0.5, z: 0 } }
-				}
-			}
-		});
-
-		// create the level clear button
-		const levelClear = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: "levelClear",
-				appearance: { meshId: buttonMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: { position: { x: anchorX, y:anchorY - 1, z: 0 } }
-				}
-			}
-		});
-
-		// Set a click handler on the button.
-		levelUp.setBehavior(MRE.ButtonBehavior)
-			.onClick(user => this.incrementLevel(1, user));
-		levelDown.setBehavior(MRE.ButtonBehavior)
-			.onClick(user => this.incrementLevel(-1, user));
+		this.createButton(menu.id,
+			"levelDown",
+			"Level Down",
+			{x:anchorX, y:anchorY - 0.5, z:0},
+			user => this.incrementLevel(-1, user));
 		
-		// ensure the value will clear the current belt
-		levelClear.setBehavior(MRE.ButtonBehavior)
-			.onClick(user => this.removeUserBelt(user));
-
-		// Create a label for the menu entries
-		MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: 'label',
-				text: {
-					contents: "Level Up",
-					height: 0.5,
-					anchor: MRE.TextAnchorLocation.MiddleLeft
-				},
-				transform: {
-					local: { position: { x: anchorX + 0.5, y:anchorY, z: 0 } }
-				}
-			}
-		});
-
-		// create the level down button
-		MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: 'label',
-				text: {
-					contents: "Level Down",
-					height: 0.5,
-					anchor: MRE.TextAnchorLocation.MiddleLeft
-				},
-				transform: {
-					local: { position: { x: anchorX + 0.5, y:anchorY - 0.5, z: 0 } }
-				}
-			}
-		});
-
-		// Create a label for the clear button
-		MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: menu.id,
-				name: 'label',
-				text: {
-					contents: "Clear",
-					height: 0.5,
-					anchor: MRE.TextAnchorLocation.MiddleLeft
-				},
-				transform: {
-					local: { position: { x: anchorX + 0.5, y:anchorY - 1, z: 0 } }
-				}
-			}
-		});
+		this.createButton(menu.id,
+			"cleanLevel",
+			"Clear",
+			{x:anchorX, y:anchorY - 1, z:0},
+			user => this.removeUserBelt(user));	
 	}
 
-	private createButton(parentId: MRE.Guid, name:string, text:string, position:MRE.Vector3Like, handler: MRE.ActionHandler<MRE.ButtonEventData>) {
+	private createButton(parentId: MRE.Guid,
+		name: string,
+		text: string,
+		position: MRE.Vector3Like, 
+		handler: MRE.ActionHandler<MRE.ButtonEventData>) {
+
 		// Create menu button
 		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
 
@@ -523,7 +422,7 @@ export default class DojoShirt {
 
 		// ensure the value will clear the current belt
 		button.setBehavior(MRE.ButtonBehavior)
-			.onClick(user => this.removeUserBelt(user));
+			.onClick(handler);
 
 		// Create a label for the  button
 		MRE.Actor.Create(this.context, {
@@ -764,6 +663,7 @@ export default class DojoShirt {
 		if(runtime.belt !== null){
 			runtime.belt.destroy();
 			runtime.belt = null;
+			runtime.settings.level = -1;
 		}
 
 		this.runtimeSettings.set(user.id, runtime);
@@ -779,6 +679,7 @@ export default class DojoShirt {
 		if(runtime.shirt !== null){
 			runtime.shirt.destroy();
 			runtime.shirt = null;
+			runtime.settings.shirt = null;
 		}
 
 		this.runtimeSettings.set(user.id, runtime);

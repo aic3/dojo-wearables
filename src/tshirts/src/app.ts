@@ -112,7 +112,8 @@ export default class DojoShirt {
 	// settings endpoint
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
-
+	private initialized = false;
+	
 	/**
 	 * Constructs a new instance of this class.
 	 * @param context The MRE SDK context.
@@ -167,9 +168,13 @@ export default class DojoShirt {
 	// use () => {} syntax here to get proper scope binding when called via setTimeout()
 	// if async is required, next line becomes private startedImpl = async () => {
 	private startedImpl = async () => {
+		if(this.initialized){
+			console.log("App initialized. Exiting");
+			return;
+		}
+
 		// Preload all the models.
 		await this.preloadShirts();
-
 		await this.preloadBelts();
 
 		// Show the menu.
@@ -177,6 +182,8 @@ export default class DojoShirt {
 
 		// create the rewards button
 		this.createRewardButton();
+		this.initialized = true;
+		console.log("Initialized: true");
 	}
 
 	/**
@@ -670,7 +677,7 @@ export default class DojoShirt {
 	 */
 	private removeUserBelt(user: MRE.User){
 		const runtime = this.runtimeSettings.get(user.id);
-		this.logUser(user, "removing shirt");
+		this.logUser(user, "removing belt");
 
 		if(runtime.belt !== null){
 			runtime.belt.destroy();

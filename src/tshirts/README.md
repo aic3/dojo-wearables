@@ -1,6 +1,6 @@
 # Summary
 
-* forked from the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
+* Forked from the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
 
 ## Setup
 
@@ -57,4 +57,18 @@ Once you have your MRE up and running, and you've successfully spawned an instan
 
 ## Attribution
 
-Hat models taken from a sample in the previous AltspaceVR SDK.
+Based on the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
+
+## Local Docker container debugging
+
+### Build locally
+
+```cmd
+docker build . -t dojo-tshirt  
+```
+
+### Run a local container instance
+
+```cmd
+docker run -it --rm  --name dojo-tshirt -p 3901:3901 -e X-FUNCTIONS-KEY={key to azure functions} dojo-tshirt
+```

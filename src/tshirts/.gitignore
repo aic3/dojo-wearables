@@ -77,3 +77,6 @@ app.zip
 
 # package lock
 package-lock.json
+
+# local vscode config
+.vscode/

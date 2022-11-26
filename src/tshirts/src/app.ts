@@ -392,6 +392,9 @@ export default class DojoShirt {
 		console.log("TShirt menu created");
 	}
 
+	/**
+	 * create the reward button
+	 */
 	private createRewardButton() {
 		const menu = MRE.Actor.Create(this.context, {});
 		const anchorX = 4;

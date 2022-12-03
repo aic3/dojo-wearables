@@ -1,96 +1,10 @@
 /*!
- * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
-
-/**
- * Shirt db entry
- */
-type ShirtDescriptor = {
-	displayName: string;
-	resourceName: string;
-	transform: string;
-};
-
-/**
- * ShirtDB entry
- */
-type BeltOrderDescriptor = {
-	order: number;
-	resourceName: string;
-};
-
-/**
- * belt descriptor
- */
-
-type BeltDescriptor = {
-	[key: string]: BeltOrderDescriptor;
-};
-
-/*
-asset transforms
-*/
-type TransformDescriptor = {
-	attachPoint: string;
-	scale: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	rotation: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	position: {
-		x: number;
-		y: number;
-		z: number;
-	};
-}
-
-/**
- * The shirt database structure.
- */
-type ShirtDatabase = {
-	[key: string]: ShirtDescriptor;
-};
-
-/**
- * belt database structure
- */
-type BeltsDB = {
-	belts: BeltDescriptor;
-	transform: string;
-};
-
-type TransformsDB = {
-	[key: string]: TransformDescriptor;
-};
-
-/**
- * user settings
- */
-type UserSettings = {
-	id: string;
-	name: string;
-	shirt: string;
-	level: number;
-}
-
-/**
- * runtime user settings
- */
-type RuntimeUserSettings = {
-	intialized: boolean;
-	settings: UserSettings;
-	belt: MRE.Actor;
-	shirt: MRE.Actor;
-}
+import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
@@ -192,18 +106,7 @@ export default class DojoShirt {
 	 */
 	private userLeft(user: MRE.User) {
 		// save the user settings
-		const runtime = this.runtimeSettings.get(user.id);
-		if(runtime.settings !== null){
-			// add the username if needed
-			if(runtime.settings.name === null){
-				runtime.settings.name = user.name;
-			}
-
-			this.saveUserSettings(runtime.settings)
-			.then(function(success){
-				console.log("[" + user.id + "|" + user.name + "]: settings saved");
-			});
-		}
+		this.saveUserSettings(user);
 
 		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
@@ -281,11 +184,27 @@ export default class DojoShirt {
 		return settings;
 	}
 
+	private async saveUserSettings(user: MRE.User){
+		// save the user settings
+		const runtime = this.runtimeSettings.get(user.id);
+		if(runtime.settings !== null){
+			// add the username if needed
+			if(runtime.settings.name === null){
+				runtime.settings.name = user.name;
+			}
+
+			await this.setUserSettings(runtime.settings)
+			.then(function(success){
+				console.log("[" + user.id + "|" + user.name + "]: settings saved");
+			});
+		}
+	}
+
 	/**
 	 * saves the current users settings
 	 * @param settings 
 	 */
-	private async saveUserSettings(settings: UserSettings){
+	private async setUserSettings(settings: UserSettings){
 		const endpoint = this.settingsEndpoint + "/api/setusersettings";
 		console.log("Saving user settings [" + endpoint + "]: " + JSON.stringify(settings));
 
@@ -414,7 +333,15 @@ export default class DojoShirt {
 				const runtime = this.runtimeSettings.get(user.id);
 				runtime.settings.level = -1;
 				this.runtimeSettings.set(user.id, runtime);
-			});	
+			});
+
+		this.createButton(menu.id,
+			"saveSettings",
+			"Save Settings",
+			{x:anchorX, y:anchorY - 1.5, z:0},
+			user => {
+				this.saveUserSettings(user);
+			});
 	}
 
 	private createButton(parentId: MRE.Guid,

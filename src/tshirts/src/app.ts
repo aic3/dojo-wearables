@@ -83,7 +83,7 @@ export default class DojoShirt {
 	// if async is required, next line becomes private startedImpl = async () => {
 	private startedImpl = async () => {
 		if(this.initialized){
-			console.log("App initialized. Exiting");
+			console.log(" startedImpl - App initialized.");
 			return;
 		}
 
@@ -305,7 +305,7 @@ export default class DojoShirt {
 	}
 
 	/**
-	 * create the reward button
+	 * create the interactable buttons
 	 */
 	private createRewardButton() {
 		const menu = MRE.Actor.Create(this.context, {});
@@ -338,12 +338,38 @@ export default class DojoShirt {
 		this.createButton(menu.id,
 			"saveSettings",
 			"Save Settings",
-			{x:anchorX, y:anchorY - 1.5, z:0},
+			{x:anchorX, y:anchorY - 2, z:0},
 			user => {
 				this.saveUserSettings(user);
 			});
+
+		this.createButton(menu.id,
+			"promptUser",
+			"User Prompt",
+			{x:anchorX, y:anchorY - 2.5, z:0},
+			user => {
+				this.logUser(user, "prompting user");
+				user.prompt("Question?", true)
+				.then(response => {
+					let responseText = "No response submitted";
+					if(response.submitted){
+						responseText = "We received: " + response.text;
+					}
+
+					this.logUser
+					user.prompt(responseText, false);
+				});
+			});
 	}
 
+	/**
+	 * Creates an MRE button
+	 * @param parentId 
+	 * @param name 
+	 * @param text 
+	 * @param position 
+	 * @param handler 
+	 */
 	private createButton(parentId: MRE.Guid,
 		name: string,
 		text: string,
@@ -592,6 +618,10 @@ export default class DojoShirt {
 		this.runtimeSettings.set(user.id, runtime);
 	}
 
+	/**
+	 * 
+	 * @param user Remove the user assets
+	 */
 	private removeAssets(user: MRE.User) {
 		// remove any attached assets
 		this.removeUserBelt(user);

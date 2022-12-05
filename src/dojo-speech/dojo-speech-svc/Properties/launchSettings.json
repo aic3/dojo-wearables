@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "dojo-speech-svc": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 34968,
+      "useSSL": false
+    }
+  }
+}

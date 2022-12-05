@@ -7,7 +7,7 @@ env:
   AZURE_FUNCTIONAPP_NAME: dojo-speech-svc
   AZURE_FUNCTIONAPP_PACKAGE_PATH: dojo-speech-svc\.
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 7.0.x
+  DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: dojo-speech-svc
   AZURE_APIM_RESOURCEGROUP: dojo-apps
   AZURE_APIM_SERVICENAME: dojo-speech-svcapi

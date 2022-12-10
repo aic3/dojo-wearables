@@ -53,44 +53,45 @@ namespace dojo_speech_svc
             string body = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(body);
             string text = req.Query["text"];
-            SpeechSynthesisResult result = await synth.SpeakTextAsync(text);
-            FileStreamResult streamResult = null;
+            SpeechSynthesisResult result;
             HttpResponseMessage rspMsg = null;
 
             // pull the text from the content body if it exists
-            text = text ?? data?.text; ;
+            text = text ?? data?.text;
+            this._logger.LogDebug($"callng synth.SpeakTextAsync with {text}");
+            result = await synth.SpeakTextAsync(text);
+            this._logger.LogDebug($"Synth result: {result.Reason} - {text}");
 
             // save the output to a stream
             using (AudioDataStream stream = AudioDataStream.FromResult(result))
             {
-                //byte[] buffer = new byte[stream.];
-                using(MemoryStream mStream = new MemoryStream())
+                this._logger.LogDebug($"converting audio stream");
+                MemoryStream mStream = new MemoryStream();
+                Guid reqId = Guid.NewGuid();
+                int bufferSize = 4096000;
+                byte[] buffer = new byte[bufferSize];
+                int read = 0;
+                do
                 {
-                    Guid reqId = Guid.NewGuid();
-                    int bufferSize = 4096000;
-                    byte[] buffer = new byte[bufferSize];
-                    int read = 0;
-                    do
-                    {
-                        read = (int)stream.ReadData(buffer);
-                        mStream.Write(buffer, 0, read);
-                    } while (read > 0);
+                    read = (int)stream.ReadData(buffer);
+                    mStream.Write(buffer, 0, read);
+                } while (read > 0);
 
-                    // create the file stream
-                    mStream.Position = 0;
-                    streamResult = new FileStreamResult(mStream, "audio/mpeg3");
+                // create the file stream
+                this._logger.LogDebug("Creating HttpResponseMessage");
+                mStream.Position = 0;
+                // streamResult = new FileStreamResult(mStream, "audio/mpeg3");
 
-                    rspMsg = new HttpResponseMessage(HttpStatusCode.OK);
-                    rspMsg.Content = new StreamContent(mStream);
-                    rspMsg.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
-                    {
-                        FileName = $"{reqId.ToString()}.mp3" 
-                    };
-                    rspMsg.Content.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg3");
+                rspMsg = new HttpResponseMessage(HttpStatusCode.OK);
+                rspMsg.Content = new StreamContent(mStream);
+                rspMsg.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = $"{reqId.ToString()}.wav" 
+                };
+                // rspMsg.Content.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg3");                
+            }
 
-                }
-            }        
-
+            this._logger.LogDebug("returning audio attachment");
             return rspMsg;
         }
 
@@ -102,8 +103,12 @@ namespace dojo_speech_svc
         {
             string key = this._config[TextToSpeech.SPEECH_SERVICES_KEY];
             string region = this._config[TextToSpeech.SPEECH_SERVICES_REGION];
-            SpeechConfig config = SpeechConfig.FromSubscription(key, region);
-            SpeechSynthesizer speechSynthesizer = new SpeechSynthesizer(config);
+            SpeechConfig config;
+            SpeechSynthesizer speechSynthesizer;
+            
+            config = SpeechConfig.FromSubscription(key, region);
+            config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3);
+            speechSynthesizer = new SpeechSynthesizer(config);
 
             this._logger.LogDebug("Speech synthensizer created");
             return speechSynthesizer;

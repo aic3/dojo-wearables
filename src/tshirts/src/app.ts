@@ -3,6 +3,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+import { MediaInstance, TextAnchorLocation } from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
 import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
 
@@ -27,6 +28,7 @@ export default class DojoShirt {
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 	private initialized = false;
+	private rootActor = MRE.Actor.Create(this.context, {});
 	
 	/**
 	 * Constructs a new instance of this class.
@@ -160,6 +162,7 @@ export default class DojoShirt {
 	 */
 	private async loadUserSettings(user: MRE.User) {
 		this.logUser(user, "loading settings using endpoint: " + this.settingsEndpoint);
+		await this.rootActor.created();
 		
 		// exec the api call 
 		const apiSet = await this.apiCall<UserSettings>(
@@ -356,9 +359,35 @@ export default class DojoShirt {
 						responseText = "We received: " + response.text;
 					}
 
-					this.logUser
 					user.prompt(responseText, false);
 				});
+			});
+
+		this.createButton(menu.id,
+			"playAudio",
+			"Play Audio",
+			{x:anchorX, y:anchorY - 3, z:0},
+			user => {
+				// load the audo segment
+				const date = new Date();
+				const msg = "Hello " + user.name + " you have activated AltSpace Audio on " + date.toLocaleString();
+				const code = "";
+				const rootUri = "https://dojo-speech-svc.azurewebsites.net/api/ConvertTextToSpeech?code=";
+				const url = rootUri + code + "&text=" + msg;
+
+				const sound = this.assets.createSound("devsource", {uri: url});
+				const instance = new MediaInstance(this.rootActor, sound.id);
+				instance.start({looping: false,volume: 1});
+				this.logUser(user, "audio complete");
+
+				this.logUser(user, "Sound created from: " + url);
+
+				/*
+				fetch(url)
+				.then(value => {
+					this.logUser(user, "Audio call returned: " + value.status);
+				});
+				*/
 			});
 	}
 

@@ -58,6 +58,10 @@ namespace dojo_speech_svc
 
             // pull the text from the content body if it exists
             text = text ?? data?.text;
+            if (text.EndsWith(".mp3"))
+            {
+                text = text.Substring(0, text.Length - 4);
+            }
             this._logger.LogDebug($"callng synth.SpeakTextAsync with {text}");
             result = await synth.SpeakTextAsync(text);
             this._logger.LogDebug($"Synth result: {result.Reason} - {text}");

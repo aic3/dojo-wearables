@@ -28,7 +28,7 @@ export default class DojoShirt {
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 	private initialized = false;
-	private rootActor = MRE.Actor.Create(this.context, {});
+	// private rootActor = MRE.Actor.Create(this.context, {});
 	
 	/**
 	 * Constructs a new instance of this class.
@@ -162,7 +162,7 @@ export default class DojoShirt {
 	 */
 	private async loadUserSettings(user: MRE.User) {
 		this.logUser(user, "loading settings using endpoint: " + this.settingsEndpoint);
-		await this.rootActor.created();
+		// await this.rootActor.created();
 		
 		// exec the api call 
 		const apiSet = await this.apiCall<UserSettings>(
@@ -369,18 +369,12 @@ export default class DojoShirt {
 			{x:anchorX, y:anchorY - 3, z:0},
 			user => {
 				// load the audo segment
-				const date = new Date();
-				const msg = "Hello " + user.name + " you have activated AltSpace Audio on " + date.toLocaleString();
-				const code = "";
-				const rootUri = "https://dojo-speech-svc.azurewebsites.net/api/ConvertTextToSpeech?code=";
-				const url = rootUri + code + "&text=" + msg;
-
-				const sound = this.assets.createSound("devsource", {uri: url});
-				const instance = new MediaInstance(this.rootActor, sound.id);
-				instance.start({looping: false,volume: 1});
-				this.logUser(user, "audio complete");
-
-				this.logUser(user, "Sound created from: " + url);
+				
+				this.playSound(user, menu)
+				.then(value => {
+					this.logUser(user, "audio complete");
+				});
+				
 
 				/*
 				fetch(url)
@@ -389,6 +383,26 @@ export default class DojoShirt {
 				});
 				*/
 			});
+	}
+
+	private async playSound(user: MRE.User, actor: MRE.Actor){
+		const date = new Date();
+		const msg = "Hello " + user.name + " you have activated AltSpace Audio on " + date.toLocaleString();
+		const code = "";
+		const rootUri = "http://localhost:7071/api/ConvertTextToSpeech?code="; 
+		// "https://dojo-speech-svc.azurewebsites.net/api/ConvertTextToSpeech?code=";
+		// const url = "https://file-examples.com/storage/fee589dbcc6394c129ba7e9/2017/11/file_example_MP3_700KB.mp3"; 
+		const url = rootUri + code + "&text=" + msg + ".mp3";
+
+		this.logUser(user, "calling :" + url);
+		const sound = this.assets.createSound("devsource", {uri: url});
+		await sound.created;
+
+		// const instance = new MediaInstance(this.rootActor, sound.id);
+		actor.startSound(sound.id, {looping: false,volume: 5, paused:false});
+		// instance.start({looping: false,volume: 1});
+
+		this.logUser(user, "Sound created from: " + url);
 	}
 
 	/**

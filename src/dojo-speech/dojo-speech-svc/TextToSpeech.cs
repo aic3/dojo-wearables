@@ -107,7 +107,7 @@ namespace dojo_speech_svc
             SpeechSynthesizer speechSynthesizer;
             
             config = SpeechConfig.FromSubscription(key, region);
-            config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3);
+            config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Raw16Khz16BitMonoPcm);
             speechSynthesizer = new SpeechSynthesizer(config);
 
             this._logger.LogDebug("Speech synthensizer created");

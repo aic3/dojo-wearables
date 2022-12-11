@@ -86,9 +86,9 @@ namespace dojo_speech_svc
                 rspMsg.Content = new StreamContent(mStream);
                 rspMsg.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                 {
-                    FileName = $"{reqId.ToString()}.wav" 
+                    FileName = $"{reqId.ToString()}.mp3" 
                 };
-                // rspMsg.Content.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg3");                
+                rspMsg.Content.Headers.ContentType = new MediaTypeHeaderValue("audio/mp3");                
             }
 
             this._logger.LogDebug("returning audio attachment");
@@ -107,7 +107,9 @@ namespace dojo_speech_svc
             SpeechSynthesizer speechSynthesizer;
             
             config = SpeechConfig.FromSubscription(key, region);
-            config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Raw16Khz16BitMonoPcm);
+
+            // speech samples: https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/python/console/speech_synthesis_sample.py
+            config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3);
             speechSynthesizer = new SpeechSynthesizer(config);
 
             this._logger.LogDebug("Speech synthensizer created");

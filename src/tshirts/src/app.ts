@@ -342,67 +342,10 @@ export default class DojoShirt {
 			{x:anchorX, y:anchorY - 2, z:0},
 			user => {
 				this.saveUserSettings(user);
-			});
-
-		this.createButton(menu.id,
-			"promptUser",
-			"User Prompt",
-			{x:anchorX, y:anchorY - 2.5, z:0},
-			user => {
-				this.logUser(user, "prompting user");
-				user.prompt("Question?", true)
-				.then(response => {
-					let responseText = "No response submitted";
-					if(response.submitted){
-						responseText = "We received: " + response.text;
-					}
-
-					user.prompt(responseText, false);
-				});
-			});
-
-		this.createButton(menu.id,
-			"playAudio",
-			"Play Audio",
-			{x:anchorX, y:anchorY - 3, z:0},
-			user => {
-				// load the audo segment
-				
-				this.playSound(user, menu)
-				.then(value => {
-					this.logUser(user, "audio complete");
-				});
-				
-
-				/*
-				fetch(url)
-				.then(value => {
-					this.logUser(user, "Audio call returned: " + value.status);
-				});
-				*/
+				user.prompt("Settings Saved", false);
 			});
 	}
-
-	private async playSound(user: MRE.User, actor: MRE.Actor){
-		const date = new Date();
-		const msg = "Hello " + user.name + " you have activated AltSpace Audio on " + date.toLocaleString();
-		const code = "";
-		const rootUri = "http://localhost:7071/api/ConvertTextToSpeech?code="; 
-		// "https://dojo-speech-svc.azurewebsites.net/api/ConvertTextToSpeech?code=";
-		// const url = "https://file-examples.com/storage/fee589dbcc6394c129ba7e9/2017/11/file_example_MP3_700KB.mp3"; 
-		const url = rootUri + code + "&text=" + msg + ".mp3";
-
-		this.logUser(user, "calling :" + url);
-		const sound = this.assets.createSound("devsource", {uri: url});
-		await sound.created;
-
-		// const instance = new MediaInstance(this.rootActor, sound.id);
-		actor.startSound(sound.id, {looping: false,volume: 5, paused:false});
-		// instance.start({looping: false,volume: 1});
-
-		this.logUser(user, "Sound created from: " + url);
-	}
-
+	
 	/**
 	 * Creates an MRE button
 	 * @param parentId 

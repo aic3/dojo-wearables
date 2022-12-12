@@ -6,13 +6,16 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
 import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// ref: https://smartdevpreneur.com/typescript-eslint-ignore-and-disable-type-rules/
+// @ts-ignore
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+// @ts-ignore
 const BeltsDB: BeltsDB = require('../public/belts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+// @ts-ignore
 const TransformsDB: TransformsDB = require('../public/transforms.json'); 
 
 /**

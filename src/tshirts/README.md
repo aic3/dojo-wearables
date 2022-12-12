@@ -1,10 +1,13 @@
 # Summary
 
-* Forked from the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
+* Intiially derived from the [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
+
+* [MRE SDK Docs](https://microsoft.github.io/mixed-reality-extension-sdk/)
+* [Good MRE Dev Series](https://everythingaltspace.com/mre-development/)
 
 ## Setup
 
-* Open a command prompt to this folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follow.
+* Open a command prompt to this folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follows.
 * Open the root folder of this repo in VSCode if you wish to follow the VSCode-oriented instructions.
 
 ## Build
@@ -59,7 +62,7 @@ Once you have your MRE up and running, and you've successfully spawned an instan
 
 Based on the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
 
-## Local Docker container debugging
+## Docker container debugging
 
 ### Build locally
 
@@ -71,4 +74,12 @@ docker build . -t dojo-tshirt
 
 ```cmd
 docker run -it --rm  --name dojo-tshirt -p 3901:3901 -e X-FUNCTIONS-KEY={key to azure functions} dojo-tshirt
+```
+
+## Running Azure Storage containers locally
+
+- ref: [Use the Azurite emulator for local Azure Storage development](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=docker-hub)
+
+```cmd
+docker run --name azureite -d  -p 10000:10000 -p 10001:10001 -p 10002:10002 -v c:/dev/data/azurite:/data mcr.microsoft.com/azure-storage/azurite 
 ```

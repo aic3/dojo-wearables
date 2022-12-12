@@ -1,104 +1,21 @@
 /*!
- * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
+import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
 
-/**
- * Shirt db entry
- */
-type ShirtDescriptor = {
-	displayName: string;
-	resourceName: string;
-	transform: string;
-};
-
-/**
- * ShirtDB entry
- */
-type BeltOrderDescriptor = {
-	order: number;
-	resourceName: string;
-};
-
-/**
- * belt descriptor
- */
-
-type BeltDescriptor = {
-	[key: string]: BeltOrderDescriptor;
-};
-
-/*
-asset transforms
-*/
-type TransformDescriptor = {
-	attachPoint: string;
-	scale: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	rotation: {
-		x: number;
-		y: number;
-		z: number;
-	};
-	position: {
-		x: number;
-		y: number;
-		z: number;
-	};
-}
-
-/**
- * The shirt database structure.
- */
-type ShirtDatabase = {
-	[key: string]: ShirtDescriptor;
-};
-
-/**
- * belt database structure
- */
-type BeltsDB = {
-	belts: BeltDescriptor;
-	transform: string;
-};
-
-type TransformsDB = {
-	[key: string]: TransformDescriptor;
-};
-
-/**
- * user settings
- */
-type UserSettings = {
-	id: string;
-	name: string;
-	shirt: string;
-	level: number;
-}
-
-/**
- * runtime user settings
- */
-type RuntimeUserSettings = {
-	intialized: boolean;
-	settings: UserSettings;
-	belt: MRE.Actor;
-	shirt: MRE.Actor;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// ref: https://smartdevpreneur.com/typescript-eslint-ignore-and-disable-type-rules/
+// @ts-ignore
 const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+// @ts-ignore
 const BeltsDB: BeltsDB = require('../public/belts.json');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+// @ts-ignore
 const TransformsDB: TransformsDB = require('../public/transforms.json'); 
 
 /**
@@ -110,9 +27,10 @@ export default class DojoShirt {
 	private prefabs: { [key: string]: MRE.Prefab } = {};
 
 	// settings endpoint
-	private settingsEndpoint = "https://dojoapps-usr-attrb-svc.azurewebsites.net"; 
+	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
-
+	private initialized = false;
+	
 	/**
 	 * Constructs a new instance of this class.
 	 * @param context The MRE SDK context.
@@ -167,9 +85,13 @@ export default class DojoShirt {
 	// use () => {} syntax here to get proper scope binding when called via setTimeout()
 	// if async is required, next line becomes private startedImpl = async () => {
 	private startedImpl = async () => {
+		if(this.initialized){
+			console.log(" startedImpl - App initialized.");
+			return;
+		}
+
 		// Preload all the models.
 		await this.preloadShirts();
-
 		await this.preloadBelts();
 
 		// Show the menu.
@@ -177,6 +99,8 @@ export default class DojoShirt {
 
 		// create the rewards button
 		this.createRewardButton();
+		this.initialized = true;
+		console.log("Initialized: true");
 	}
 
 	/**
@@ -185,18 +109,7 @@ export default class DojoShirt {
 	 */
 	private userLeft(user: MRE.User) {
 		// save the user settings
-		const runtime = this.runtimeSettings.get(user.id);
-		if(runtime.settings !== null){
-			// add the username if needed
-			if(runtime.settings.name === null){
-				runtime.settings.name = user.name;
-			}
-
-			this.saveUserSettings(runtime.settings)
-			.then(function(success){
-				console.log("[" + user.id + "|" + user.name + "]: settings saved");
-			});
-		}
+		this.saveUserSettings(user);
 
 		// If the user was wearing anything, destroy it. Otherwise it would be
 		// orphaned in the world.
@@ -225,7 +138,7 @@ export default class DojoShirt {
 		await this.startedImpl();
 
 		// intialize the user shirt
-		if(settings.shirt !== null && settings.shirt != undefined){
+		if(settings.shirt !== null && settings.shirt !== undefined){
 			this.logUser(user, "Intializing shirt: " + settings.shirt);
 			this.wearShirt(settings.shirt, user);
 		}
@@ -250,6 +163,7 @@ export default class DojoShirt {
 	 */
 	private async loadUserSettings(user: MRE.User) {
 		this.logUser(user, "loading settings using endpoint: " + this.settingsEndpoint);
+		// await this.rootActor.created();
 		
 		// exec the api call 
 		const apiSet = await this.apiCall<UserSettings>(
@@ -274,11 +188,27 @@ export default class DojoShirt {
 		return settings;
 	}
 
+	private async saveUserSettings(user: MRE.User){
+		// save the user settings
+		const runtime = this.runtimeSettings.get(user.id);
+		if(runtime.settings !== null){
+			// add the username if needed
+			if(runtime.settings.name === null){
+				runtime.settings.name = user.name;
+			}
+
+			await this.setUserSettings(runtime.settings)
+			.then(function(success){
+				console.log("[" + user.id + "|" + user.name + "]: settings saved");
+			});
+		}
+	}
+
 	/**
 	 * saves the current users settings
 	 * @param settings 
 	 */
-	private async saveUserSettings(settings: UserSettings){
+	private async setUserSettings(settings: UserSettings){
 		const endpoint = this.settingsEndpoint + "/api/setusersettings";
 		console.log("Saving user settings [" + endpoint + "]: " + JSON.stringify(settings));
 
@@ -379,7 +309,7 @@ export default class DojoShirt {
 	}
 
 	/**
-	 * create the reward button
+	 * create the interactable buttons
 	 */
 	private createRewardButton() {
 		const menu = MRE.Actor.Create(this.context, {});
@@ -407,9 +337,26 @@ export default class DojoShirt {
 				const runtime = this.runtimeSettings.get(user.id);
 				runtime.settings.level = -1;
 				this.runtimeSettings.set(user.id, runtime);
-			});	
-	}
+			});
 
+		this.createButton(menu.id,
+			"saveSettings",
+			"Save Settings",
+			{x:anchorX, y:anchorY - 2, z:0},
+			user => {
+				this.saveUserSettings(user);
+				user.prompt("Settings Saved", false);
+			});
+	}
+	
+	/**
+	 * Creates an MRE button
+	 * @param parentId 
+	 * @param name 
+	 * @param text 
+	 * @param position 
+	 * @param handler 
+	 */
 	private createButton(parentId: MRE.Guid,
 		name: string,
 		text: string,
@@ -658,6 +605,10 @@ export default class DojoShirt {
 		this.runtimeSettings.set(user.id, runtime);
 	}
 
+	/**
+	 * 
+	 * @param user Remove the user assets
+	 */
 	private removeAssets(user: MRE.User) {
 		// remove any attached assets
 		this.removeUserBelt(user);
@@ -670,7 +621,7 @@ export default class DojoShirt {
 	 */
 	private removeUserBelt(user: MRE.User){
 		const runtime = this.runtimeSettings.get(user.id);
-		this.logUser(user, "removing shirt");
+		this.logUser(user, "removing belt");
 
 		if(runtime.belt !== null){
 			runtime.belt.destroy();

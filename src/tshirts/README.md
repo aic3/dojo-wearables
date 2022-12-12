@@ -3,10 +3,11 @@
 * Intiially derived from the [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
 
 * [MRE SDK Docs](https://microsoft.github.io/mixed-reality-extension-sdk/)
+* [Good MRE Dev Series](https://everythingaltspace.com/mre-development/)
 
 ## Setup
 
-* Open a command prompt to this folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follow.
+* Open a command prompt to this folder and run `npm install`. Keep the command prompt open if you wish to follow the command-oriented instructions that follows.
 * Open the root folder of this repo in VSCode if you wish to follow the VSCode-oriented instructions.
 
 ## Build

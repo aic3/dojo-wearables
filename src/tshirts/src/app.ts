@@ -3,7 +3,6 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { MediaInstance, TextAnchorLocation } from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
 import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
 
@@ -28,7 +27,6 @@ export default class DojoShirt {
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 	private initialized = false;
-	// private rootActor = MRE.Actor.Create(this.context, {});
 	
 	/**
 	 * Constructs a new instance of this class.

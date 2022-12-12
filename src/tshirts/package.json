@@ -4,7 +4,7 @@
   "private": true,
   "description": "",
   "main": "built/server.js",
-  "author": "Microsoft Corporation",
+  "author": "Malcolm Hyson",
   "license": "MIT",
   "keywords": [
     "mixed reality",

@@ -15,7 +15,7 @@
     "node"
   ],
   "engines": {
-    "node": ">=10.13.0",
+    "node": ">=8.12.0",
     "npm": ">=6.4.1"
   },
   "scripts": {
@@ -37,7 +37,7 @@
     "@typescript-eslint/parser": "^2.17.0",
     "eslint": "^6.8.0",
     "nodemon": "^2.0.2",
-    "typescript": "^3.7.5"
+    "typescript": "^4.9.4"
   },
   "dependencies": {
     "@microsoft/mixed-reality-extension-sdk": "^0.20.0",

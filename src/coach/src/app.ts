@@ -100,7 +100,11 @@ export default class DojoCoach {
 						responseText = "We received: " + response.text;
 					}
 
-					user.prompt(responseText, false);
+					this.playUserMsg(user, menu, responseText)
+					.then( value => {
+						this.logUser(user, "Prompting user: " + responseText);
+						user.prompt(responseText, false);
+					});					
 				});
 			});
 

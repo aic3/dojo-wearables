@@ -4,19 +4,7 @@
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import fetch, { Headers } from "node-fetch";
-import { BeltsDB, RuntimeUserSettings, ShirtDatabase, TransformsDB, UserSettings } from "./shirtTypeSpecs";
-
-// ref: https://smartdevpreneur.com/typescript-eslint-ignore-and-disable-type-rules/
-// @ts-ignore
-const ShirtDatabase: ShirtDatabase = require('../public/shirts.json');
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-// @ts-ignore
-const BeltsDB: BeltsDB = require('../public/belts.json');
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-// @ts-ignore
-const TransformsDB: TransformsDB = require('../public/transforms.json'); 
+import { RuntimeUserSettings, UserSettings, DojoData } from "dojo-common"
 
 /**
  * DojoShirt Application - Showcasing avatar attachments.
@@ -25,6 +13,10 @@ export default class DojoShirt {
 	// Container for preloaded dojo-shirt prefabs.
 	private assets: MRE.AssetContainer;
 	private prefabs: { [key: string]: MRE.Prefab } = {};
+	private dojoData = new DojoData();
+	private shirtData = this.dojoData.getShirtData();
+	private beltData = this.dojoData.getBeltData();
+	private transformData = this.dojoData.getTransformData();
 
 	// settings endpoint
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
@@ -262,7 +254,7 @@ export default class DojoShirt {
 	private showShirtsMenu() {
 		// Create a parent object for all the menu items.
 		const menu = MRE.Actor.Create(this.context, {});
-		const shirts = Object.keys(ShirtDatabase);
+		const shirts = Object.keys(this.dojoData.getShirtData());
 		let y = 2.5;
 
 		// Create a label for the menu title.
@@ -286,7 +278,7 @@ export default class DojoShirt {
 		for (const shirtId of shirts) {
 			this.createButton(menu.id,
 				shirtId,
-				ShirtDatabase[shirtId].displayName,
+				this.shirtData[shirtId].displayName,
 				{x:0, y:y, z:0},
 				user => this.wearShirt(shirtId, user));
 
@@ -404,7 +396,7 @@ export default class DojoShirt {
 	 * returns the belt key for a target level
 	 */
 	private getBeltKey(level: number){
-		const belts = Object.keys(BeltsDB.belts);
+		const belts = Object.keys(this.beltData.belts);
 		let beltKey = null;
 
 		if(level >= 0 && level < belts.length) {
@@ -419,7 +411,7 @@ export default class DojoShirt {
 	 */
 	private incrementLevel(increment: number, user: MRE.User) {
 		let level = -1;
-		const belts = Object.keys(BeltsDB.belts);
+		const belts = Object.keys(this.beltData.belts);
 		let beltKey = null;
 		let runtime = this.runtimeSettings.get(user.id);
 
@@ -467,8 +459,8 @@ export default class DojoShirt {
 		// allows the caller to wait until all assets are done preloading
 		// before continuing.
 		return Promise.all(
-			Object.keys(ShirtDatabase).map(shirtId => {
-				const asset = ShirtDatabase[shirtId];
+			Object.keys(this.shirtData).map(shirtId => {
+				const asset = this.shirtData[shirtId];
 				if (asset.resourceName) {
 					return this.preloadAsset(shirtId, asset.resourceName);					
 				} else {
@@ -483,8 +475,8 @@ export default class DojoShirt {
 	 */
 	private preloadBelts() {
 		return Promise.all(
-			Object.keys(BeltsDB.belts).map(beltId => {
-				const belt = BeltsDB.belts[beltId];
+			Object.keys(this.beltData.belts).map(beltId => {
+				const belt = this.beltData.belts[beltId];
 				return this.preloadAsset(beltId, belt.resourceName);				
 			})
 		);
@@ -531,8 +523,8 @@ export default class DojoShirt {
 		this.logUser(user, "assigning shirt");
 		this.removeUserShirt(user);
 
-		const shirtRecord = ShirtDatabase[id];
-		const transformRecord = TransformsDB[shirtRecord.transform];
+		const shirtRecord = this.shirtData[id];
+		const transformRecord = this.transformData[shirtRecord.transform];
 		const userId = user.id;
 
 		// If the user selected 'none', then early out.
@@ -568,7 +560,7 @@ export default class DojoShirt {
 	}
 
 	private wearBelt(id: string, level: number, user: MRE.User) {
-		const transformRecord = TransformsDB[BeltsDB.transform];
+		const transformRecord = this.transformData[this.beltData.transform];
 		const userId = user.id;
 
 		this.logUser(user, "assigning belt id: " + id);

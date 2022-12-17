@@ -96,6 +96,17 @@ namespace DevOpsDojo.Users.Functions
                 settings.ETag = userSettings.ETag;
                 settings.PartitionKey = userSettings.PartitionKey;
                 settings.RowKey = userSettings.RowKey;
+
+                // use the existing setting if no value is supplied
+                if(!settings.Level.HasValue || settings.Level == null)
+                {
+                    settings.Level = userSettings.Level;
+                }
+
+                if (String.IsNullOrEmpty(settings.Shirt))
+                {
+                    settings.Shirt = settings.Shirt;
+                }
             }
             else
             {

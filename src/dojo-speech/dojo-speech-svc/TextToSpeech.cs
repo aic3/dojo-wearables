@@ -84,8 +84,8 @@ namespace dojo_speech_svc
                 // create the file stream
                 this._logger.LogDebug("Creating HttpResponseMessage");
                 mStream.Position = 0;
-                // streamResult = new FileStreamResult(mStream, "audio/mpeg3");
-
+                
+                // return the response as an attachment
                 rspMsg = new HttpResponseMessage(HttpStatusCode.OK);
                 rspMsg.Content = new StreamContent(mStream);
                 rspMsg.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")

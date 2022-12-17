@@ -7,7 +7,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 /**
  * Shirt db entry
  */
- type ShirtDescriptor = {
+export type ShirtDescriptor = {
 	displayName: string;
 	resourceName: string;
 	transform: string;
@@ -16,7 +16,7 @@ import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 /**
  * ShirtDB entry
  */
-type BeltOrderDescriptor = {
+export type BeltOrderDescriptor = {
 	order: number;
 	resourceName: string;
 };
@@ -25,14 +25,14 @@ type BeltOrderDescriptor = {
  * belt descriptor
  */
 
-type BeltDescriptor = {
+export type BeltDescriptor = {
 	[key: string]: BeltOrderDescriptor;
 };
 
 /*
 asset transforms
 */
-type TransformDescriptor = {
+export type TransformDescriptor = {
 	attachPoint: string;
 	scale: {
 		x: number;

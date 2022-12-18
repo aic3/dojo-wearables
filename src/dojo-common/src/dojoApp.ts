@@ -4,24 +4,25 @@
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
 import { AssetManager } from './assetManager';
-import { RuntimeUserSettings } from './dojoTypes';
+import { RuntimeUserSettings, UserSettings } from './dojoTypes';
 import { SettingsManager } from './settingsManager';
 import { logUser } from './utility';
 
 export abstract class DojoApp {
-	protected settingsEndpoint: string;
-	protected settingsKey: string;
+	protected settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
+	protected settingsKey = process.env["X_FUNCTIONS_KEY"];
 	protected runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
 	protected assetMgr: AssetManager;
 	protected settingsMgr: SettingsManager;
 	protected initialized = false;
 
-	protected abstract preloadAssets(): void;
-	protected abstract createUX(): Promise<void>;
-	protected abstract initUserSession(user: MRE.User): void;
+	// abstract methods to be implemented by the child instance
+	protected abstract preloadAssets(): Promise<void>;
+	protected abstract createUX(): void;
+	protected abstract initUserSession(user: MRE.User, settings: UserSettings): void;
 	protected abstract closeUserSession(user: MRE.User): void;
 
-	constructor(private context: MRE.Context) {
+	constructor(protected context: MRE.Context) {
 		console.log("creating MRE context for: " + context.user.name);
 		this.settingsMgr = new SettingsManager(this.settingsEndpoint, this.settingsKey);
 		this.assetMgr = new AssetManager(context);
@@ -33,7 +34,7 @@ export abstract class DojoApp {
 	}
 
 	/**
-	 * Called when  application session starts up.
+	 * Called when application session starts up.
 	 */
 	public async started() {
 		// Check whether code is running in a debuggable watched filesystem
@@ -78,10 +79,10 @@ export abstract class DojoApp {
 		}
 
 		// Preload all the models.
-		this.preloadAssets();
+		await this.preloadAssets();
 
 		// Show the menu.
-		await this.createUX();
+		this.createUX();
 
 		this.initialized = true;
 		console.log("Initialized: true");
@@ -118,12 +119,42 @@ export abstract class DojoApp {
 		await this.startedImpl();
 
 		// intialize the user session
-		this.initUserSession(user);
+		this.initUserSession(user, settings);
 
 		// set the runtime settings as initialized
 		const initSettings = this.runtimeSettings.get(user.id);
 		initSettings.intialized = true;
 		this.runtimeSettings.set(user.id, initSettings);
 		logUser(user, "intialized");
+	}
+
+	protected async saveUserSettings(user: MRE.User,
+		includeShirt = true,
+		includeBelt = true){
+		// save the user settings
+		const runtime = this.runtimeSettings.get(user.id);
+		if(runtime.settings !== null){
+			const settings = runtime.settings;
+
+			// add the username if needed
+			if(settings.name === null){
+				settings.name = user.name;
+			}
+
+			// ignore the belt value if needed
+			if(!includeBelt){
+				settings.level = null;
+			}
+
+			// ignore the shirt value if need
+			if(!includeShirt){
+				settings.shirt = null;
+			}
+
+			await this.settingsMgr.setUserSettings(settings)
+			.then(function(success){
+				console.log("[" + user.id + "|" + user.name + "]: settings saved");
+			});
+		}
 	}
 }

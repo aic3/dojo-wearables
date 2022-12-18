@@ -3,155 +3,65 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { RuntimeUserSettings, DojoData, SettingsManager, logUser, AssetManager } from "dojo-common"
+import { DojoData, logUser, DojoApp, UserSettings } from "dojo-common"
 
 /**
  * DojoShirt Application - Showcasing avatar attachments.
  */
-export default class DojoShirt {
+export default class DojoShirt extends DojoApp {
 	// Container for preloaded dojo-shirt prefabs.
 	
 	private dojoData = new DojoData();
 	private shirtData = this.dojoData.getShirtData();
 	private beltData = this.dojoData.getBeltData();
 	private transformData = this.dojoData.getTransformData();
-
-	// settings endpoint
-	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
-	private settingsKey = process.env["X_FUNCTIONS_KEY"];
-	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
-	private assetMgr: AssetManager;
-	private settingsMgr: SettingsManager;
-	private initialized = false;
 	
 	/**
 	 * Constructs a new instance of this class.
 	 * @param context The MRE SDK context.
 	 * @param baseUrl The baseUrl to this project's `./public` folder.
 	 */
-	constructor(private context: MRE.Context) {
-		console.log("creating MRE context for: " + context.user.name);
-		this.settingsMgr = new SettingsManager(this.settingsEndpoint, this.settingsKey);
-		this.assetMgr = new AssetManager(context);
-
-		// Hook the context events we're interested npm buildin.
-		this.context.onStarted(() => this.started());
-		this.context.onUserLeft(user => this.userLeft(user));
-		this.context.onUserJoined(user => this.userJoined(user));
+	constructor(protected context: MRE.Context) {
+		// call the parent constructor
+		super(context);
 	}
 
-	/**
-	 * Called when  application session starts up.
-	 */
-	private async started() {
-		// Check whether code is running in a debuggable watched filesystem
-		// environment and if so delay starting the app by 1 second to give
-		// the debugger time to detect that the server has restarted and reconnect.
-		// The delay value below is in milliseconds so 1000 is a one second delay.
-		// You may need to increase the delay or be able to decrease it depending
-		// on the speed of your PC.
-		const delay = 1000;
-		const execArgv = process.execArgv.join();
-		const argv = process.argv.join();
-		const isDebug = argv.includes('inspect') || argv.includes('debug') 
-			|| execArgv.includes('inspect') || execArgv.includes('debug');
-
-		// // version to use with non-async code
-		// if (isDebug) {
-		// 	setTimeout(this.startedImpl, delay);
-		// } else {
-		// 	this.startedImpl();
-		// }
-
-		// version to use with async code
-		if (isDebug) {
-			// use the local settings endpoint
-			this.settingsEndpoint = "http://localhost:7071";
-
-			await new Promise(resolve => setTimeout(resolve, delay));
-			await this.startedImpl();
-		} else {
-			await this.startedImpl();
-		}
-
-		console.log("TShirts Altspace VR web started");
-	}
-
-	// use () => {} syntax here to get proper scope binding when called via setTimeout()
-	// if async is required, next line becomes private startedImpl = async () => {
-	private startedImpl = async () => {
-		if(this.initialized){
-			console.log(" startedImpl - App initialized.");
-			return;
-		}
-
-		// Preload all the models.
+	// load the shirt data
+	protected async preloadAssets() {
 		await this.preloadShirts();
-		await this.preloadBelts();
+	}
 
-		// Show the menu.
+	// load the ux
+	protected createUX() {
 		this.showShirtsMenu();
-
-		// create the rewards button
-		this.createRewardButton();
-		this.initialized = true;
-		console.log("Initialized: true");
 	}
 
 	/**
-	 * Called when a user leaves the application (probably left the Altspace world where this app is running).
-	 * @param user The user that left the building.
-	 */
-	private userLeft(user: MRE.User) {
-		// save the user settings
-		this.saveUserSettings(user);
-
-		// If the user was wearing anything, destroy it. Otherwise it would be
-		// orphaned in the world.
-		this.removeAssets(user);
-	}
-
-	/**
-	 * Called when a user joins the app
+	 * initialize the user session
 	 * @param user 
+	 * @param settings 
 	 */
-	private async userJoined(user: MRE.User) {
-		logUser(user, "joined");
-
-		const settings = await this.settingsMgr.loadUserSettings(user);
-		const runtime: RuntimeUserSettings = {
-			intialized: false,
-			settings: settings,
-			shirt: null,
-			belt: null
-		};
-
-		// set the runtime settings
-		this.runtimeSettings.set(user.id, runtime);
-
-		// ensure the started implementation has finished
-		await this.startedImpl();
-
+	protected initUserSession(user: MRE.User, settings: UserSettings): void {
 		// intialize the user shirt
 		if(settings.shirt !== null && settings.shirt !== undefined){
 			logUser(user, "Intializing shirt: " + settings.shirt);
 			this.wearShirt(settings.shirt, user);
 		}
-
-		// initialize the user belt
-		const beltKey = this.getBeltKey(settings.level);
-		if (beltKey !== null){
-			logUser(user, "Initializing belt: " + beltKey);
-			this.wearBelt(beltKey, settings.level, user);
-		}
-
-		// set the runtime settings as initialized
-		const initSettings = this.runtimeSettings.get(user.id);
-		initSettings.intialized = true;
-		this.runtimeSettings.set(user.id, initSettings);
-		logUser(user, "intialized");
 	}
-	
+
+	/**
+	 * close out the session
+	 * @param user 
+	 */
+	protected closeUserSession(user: MRE.User): void {
+		// save the user settings
+		this.saveUserSettings(user, true, false);
+
+		// If the user was wearing anything, destroy it. Otherwise it would be
+		// orphaned in the world.
+		this.removeUserShirt(user);
+	}
+
 	/**
 	 * Show a menu
 	 */
@@ -236,11 +146,11 @@ export default class DojoShirt {
 			});
 
 		this.assetMgr.createMREButton(menu.id,
-			"saveSettings",
-			"Save Settings",
+			"saveBeltSettings",
+			"Save Belt Settings",
 			{x:anchorX, y:anchorY - 2, z:0},
 			user => {
-				this.saveUserSettings(user);
+				this.saveUserSettings(user, false, true);
 				user.prompt("Settings Saved", false);
 			});
 	}
@@ -419,22 +329,6 @@ export default class DojoShirt {
 		// update the current setting
 		runtime.settings.level = level;
 		this.runtimeSettings.set(user.id, runtime);
-	}
-
-	private async saveUserSettings(user: MRE.User){
-		// save the user settings
-		const runtime = this.runtimeSettings.get(user.id);
-		if(runtime.settings !== null){
-			// add the username if needed
-			if(runtime.settings.name === null){
-				runtime.settings.name = user.name;
-			}
-
-			await this.settingsMgr.setUserSettings(runtime.settings)
-			.then(function(success){
-				console.log("[" + user.id + "|" + user.name + "]: settings saved");
-			});
-		}
 	}
 
 	/**

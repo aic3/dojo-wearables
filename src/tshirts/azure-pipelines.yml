@@ -20,7 +20,7 @@ variables:
   dockerRegistryServiceConnection: '7bea5c04-127f-4d9c-895c-ff149edac736'
   imageRepository: 'dojoapps'
   containerRegistry: 'dojoapps.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/src/tshirts/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/TShirts.Dockerfile'
   tag: '$(Build.BuildNumber)'
   
   # Agent VM image name

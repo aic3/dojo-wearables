@@ -21,15 +21,7 @@ namespace DevOpsDojo.Users.Functions.Settings
         [JsonProperty("shirt")]
         public string? Shirt { get; set; }
         [JsonProperty("level")]
-        public int? Level { 
-            get {
-                return this._level.GetValueOrDefault(-1);
-            }
-            set
-            {
-                this._level = value;
-            }
-        }
+        public int? Level { get; set; }
         [JsonIgnore]
         public string PartitionKey { get; set; }
         [JsonIgnore]

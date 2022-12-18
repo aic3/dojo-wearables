@@ -3,16 +3,14 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import fetch, { Headers } from "node-fetch";
-import { RuntimeUserSettings, UserSettings, DojoData } from "dojo-common"
+import { RuntimeUserSettings, DojoData, SettingsManager, logUser, AssetManager } from "dojo-common"
 
 /**
  * DojoShirt Application - Showcasing avatar attachments.
  */
 export default class DojoShirt {
 	// Container for preloaded dojo-shirt prefabs.
-	private assets: MRE.AssetContainer;
-	private prefabs: { [key: string]: MRE.Prefab } = {};
+	
 	private dojoData = new DojoData();
 	private shirtData = this.dojoData.getShirtData();
 	private beltData = this.dojoData.getBeltData();
@@ -20,7 +18,10 @@ export default class DojoShirt {
 
 	// settings endpoint
 	private settingsEndpoint = process.env["X_FUNCTIONS_WEB"]; 
+	private settingsKey = process.env["X_FUNCTIONS_KEY"];
 	private runtimeSettings = new Map<MRE.Guid, RuntimeUserSettings>();
+	private assetMgr: AssetManager;
+	private settingsMgr: SettingsManager;
 	private initialized = false;
 	
 	/**
@@ -30,7 +31,9 @@ export default class DojoShirt {
 	 */
 	constructor(private context: MRE.Context) {
 		console.log("creating MRE context for: " + context.user.name);
-		this.assets = new MRE.AssetContainer(context);
+		this.settingsMgr = new SettingsManager(this.settingsEndpoint, this.settingsKey);
+		this.assetMgr = new AssetManager(context);
+
 		// Hook the context events we're interested npm buildin.
 		this.context.onStarted(() => this.started());
 		this.context.onUserLeft(user => this.userLeft(user));
@@ -113,9 +116,9 @@ export default class DojoShirt {
 	 * @param user 
 	 */
 	private async userJoined(user: MRE.User) {
-		this.logUser(user, "joined");
+		logUser(user, "joined");
 
-		const settings = await this.loadUserSettings(user);
+		const settings = await this.settingsMgr.loadUserSettings(user);
 		const runtime: RuntimeUserSettings = {
 			intialized: false,
 			settings: settings,
@@ -131,14 +134,14 @@ export default class DojoShirt {
 
 		// intialize the user shirt
 		if(settings.shirt !== null && settings.shirt !== undefined){
-			this.logUser(user, "Intializing shirt: " + settings.shirt);
+			logUser(user, "Intializing shirt: " + settings.shirt);
 			this.wearShirt(settings.shirt, user);
 		}
 
 		// initialize the user belt
 		const beltKey = this.getBeltKey(settings.level);
 		if (beltKey !== null){
-			this.logUser(user, "Initializing belt: " + beltKey);
+			logUser(user, "Initializing belt: " + beltKey);
 			this.wearBelt(beltKey, settings.level, user);
 		}
 
@@ -146,108 +149,9 @@ export default class DojoShirt {
 		const initSettings = this.runtimeSettings.get(user.id);
 		initSettings.intialized = true;
 		this.runtimeSettings.set(user.id, initSettings);
-		this.logUser(user, "intialized");
+		logUser(user, "intialized");
 	}
-
-	/**
-	 * load the user settings
-	 * @param user 
-	 */
-	private async loadUserSettings(user: MRE.User) {
-		this.logUser(user, "loading settings using endpoint: " + this.settingsEndpoint);
-		// await this.rootActor.created();
-		
-		// exec the api call 
-		const apiSet = await this.apiCall<UserSettings>(
-			this.settingsEndpoint + "/api/getusersettings",
-			"POST",
-			null,
-			JSON.stringify( {
-				"id": user.id.toString()
-			})
-		);
-
-		// convert the promise
-		// need a cleaner way to convert
-		const s = JSON.stringify(apiSet);
-		const settings = JSON.parse(s) as UserSettings;
-
-		if(settings.name === null){
-			settings.name = user.name;
-		}
-		
-		this.logUser(user, "user API returned: " + JSON.stringify(settings));
-		return settings;
-	}
-
-	private async saveUserSettings(user: MRE.User){
-		// save the user settings
-		const runtime = this.runtimeSettings.get(user.id);
-		if(runtime.settings !== null){
-			// add the username if needed
-			if(runtime.settings.name === null){
-				runtime.settings.name = user.name;
-			}
-
-			await this.setUserSettings(runtime.settings)
-			.then(function(success){
-				console.log("[" + user.id + "|" + user.name + "]: settings saved");
-			});
-		}
-	}
-
-	/**
-	 * saves the current users settings
-	 * @param settings 
-	 */
-	private async setUserSettings(settings: UserSettings){
-		const endpoint = this.settingsEndpoint + "/api/setusersettings";
-		console.log("Saving user settings [" + endpoint + "]: " + JSON.stringify(settings));
-
-		// set the current settings		
-		const userSettings = await this.apiCall<UserSettings>(
-			endpoint,
-			"POST",
-			null,
-			JSON.stringify(settings));
-
-		return userSettings;
-	}
-
-	/**
-	 * api call with json unwrapping
-	 * ref: ref: https://stackoverflow.com/questions/41103360/how-to-use-fetch-in-typescript
-	 * @param uri 
-	 * @param method 
-	 * @param headers 
-	 * @returns 
-	 */
-	private async apiCall<T>(uri: string, method = "GET", headers: Headers = null, body: string = null){
-		const funcKey = process.env["X_FUNCTIONS_KEY"];
-		if(headers === null){
-			headers = new Headers();
-		}
-		headers.append("x-functions-key", funcKey);
-
-		return await fetch(uri, {
-			method: method,
-			headers: headers,
-			body:body
-		})
-		.then((response) => {
-			if(!response.ok){
-				throw new Error(response.statusText);
-			}
-			return response.json() as Promise<{ data: T }>;
-		})
-		.then((data) => {
-			return data;
-		})
-		.catch((reason) => {
-			console.log("error calling: " + uri + ", message: " + reason);
-		}); 
-	}
-
+	
 	/**
 	 * Show a menu
 	 */
@@ -276,7 +180,7 @@ export default class DojoShirt {
 
 		// Loop over the database, creating a menu item for each entry.
 		for (const shirtId of shirts) {
-			this.createButton(menu.id,
+			this.assetMgr.createMREButton(menu.id,
 				shirtId,
 				this.shirtData[shirtId].displayName,
 				{x:0, y:y, z:0},
@@ -286,7 +190,7 @@ export default class DojoShirt {
 		}
 
 		// create the clear button
-		this.createButton(menu.id,
+		this.assetMgr.createMREButton(menu.id,
 			"clearShirt",
 			"Clear",
 			{x:0, y:y, z:0},
@@ -308,19 +212,19 @@ export default class DojoShirt {
 		const anchorX = 4;
 		const anchorY = 2.5;
 
-		this.createButton(menu.id,
+		this.assetMgr.createMREButton(menu.id,
 			"levelUp",
 			"Level Up",
 			{x:anchorX, y:anchorY, z:0},
 			user => this.incrementLevel(1, user));
 
-		this.createButton(menu.id,
+		this.assetMgr.createMREButton(menu.id,
 			"levelDown",
 			"Level Down",
 			{x:anchorX, y:anchorY - 0.5, z:0},
 			user => this.incrementLevel(-1, user));
 		
-		this.createButton(menu.id,
+		this.assetMgr.createMREButton(menu.id,
 			"cleanLevel",
 			"Clear",
 			{x:anchorX, y:anchorY - 1, z:0},
@@ -331,7 +235,7 @@ export default class DojoShirt {
 				this.runtimeSettings.set(user.id, runtime);
 			});
 
-		this.createButton(menu.id,
+		this.assetMgr.createMREButton(menu.id,
 			"saveSettings",
 			"Save Settings",
 			{x:anchorX, y:anchorY - 2, z:0},
@@ -339,57 +243,6 @@ export default class DojoShirt {
 				this.saveUserSettings(user);
 				user.prompt("Settings Saved", false);
 			});
-	}
-	
-	/**
-	 * Creates an MRE button
-	 * @param parentId 
-	 * @param name 
-	 * @param text 
-	 * @param position 
-	 * @param handler 
-	 */
-	private createButton(parentId: MRE.Guid,
-		name: string,
-		text: string,
-		position: MRE.Vector3Like, 
-		handler: MRE.ActionHandler<MRE.ButtonEventData>) {
-
-		// Create menu button
-		const buttonMesh = this.assets.createBoxMesh('button', 0.3, 0.3, 0.01);
-
-		// create the level up button
-		const button = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: parentId,
-				name: name,
-				appearance: { meshId: buttonMesh.id },
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: { position: { x: position.x, y:position.y, z:position.z } }
-				}
-			}
-		});
-
-		// ensure the value will clear the current belt
-		button.setBehavior(MRE.ButtonBehavior)
-			.onClick(handler);
-
-		// Create a label for the  button
-		MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: parentId,
-				name: 'label',
-				text: {
-					contents: text,
-					height: 0.5,
-					anchor: MRE.TextAnchorLocation.MiddleLeft
-				},
-				transform: {
-					local: { position: { x: position.x + 0.5, y:position.y, z:position.z } }
-				}
-			}
-		});
 	}
 
 	/**
@@ -424,13 +277,13 @@ export default class DojoShirt {
 
 		// apply the belt to the user
 		if(level < 0) {
-			this.logUser(user, "Min level reached: " + level);
+			logUser(user, "Min level reached: " + level);
 			this.removeUserBelt(user);
 			
 			// min level
 			level = -1;
 		} else if (level > belts.length) {
-			this.logUser(user, "Max level reached: " + level);
+			logUser(user, "Max level reached: " + level);
 			beltKey = belts[belts.length - 1];
 
 			// max level
@@ -438,7 +291,7 @@ export default class DojoShirt {
 		} else {
 			beltKey = belts[level];
 
-			this.logUser(user, "Setting user level: " + level);
+			logUser(user, "Setting user level: " + level);
 			this.wearBelt(beltKey, level, user);
 		}
 
@@ -462,7 +315,7 @@ export default class DojoShirt {
 			Object.keys(this.shirtData).map(shirtId => {
 				const asset = this.shirtData[shirtId];
 				if (asset.resourceName) {
-					return this.preloadAsset(shirtId, asset.resourceName);					
+					return this.assetMgr.loadAsset(shirtId, asset.resourceName);					
 				} else {
 					return Promise.resolve();
 				}
@@ -477,40 +330,9 @@ export default class DojoShirt {
 		return Promise.all(
 			Object.keys(this.beltData.belts).map(beltId => {
 				const belt = this.beltData.belts[beltId];
-				return this.preloadAsset(beltId, belt.resourceName);				
+				return this.assetMgr.loadAsset(beltId, belt.resourceName);				
 			})
 		);
-	}
-
-	/**
-	 * preloads asset into the local prefabs
-	 */
-
-	private preloadAsset(id: string, filename: string){
-		console.log("pre-loading asset[" + id + "]: " + filename);
-		return this.assets.loadGltf(filename)
-			.then(assets => {
-				console.log(id + " loaded");
-				this.prefabs[id] = assets.find(a => a.prefab !== null) as MRE.Prefab;
-			})
-			.catch(e => {
-				this.logError(e);
-			});
-	}
-
-	/**
-	 * generic error logging
-	 */
-	private logError(e: any){
-		console.log("error: " + e);
-		MRE.log.error("app", e);
-	}
-
-	/**
-	 * logs a user activity
-	 */
-	private logUser(user: MRE.User, msg: string){
-		console.log("[" + user.id + "|" + user.name + "]: " + msg);
 	}
 
 	/**
@@ -520,7 +342,8 @@ export default class DojoShirt {
 	 */
 	private wearShirt(id: string, user: MRE.User) {
 		// If the user is wearing an asset, destroy it.
-		this.logUser(user, "assigning shirt");
+		logUser(user, "assigning shirt");
+		const prefabs = this.assetMgr.getPrefabs();
 		this.removeUserShirt(user);
 
 		const shirtRecord = this.shirtData[id];
@@ -536,7 +359,7 @@ export default class DojoShirt {
 		const runtime = this.runtimeSettings.get(user.id);
 
 		runtime.shirt = MRE.Actor.CreateFromPrefab(this.context, {
-			prefab: this.prefabs[id],
+			prefab: prefabs[id],
 			actor: {
 				transform: {
 					local: {
@@ -562,8 +385,9 @@ export default class DojoShirt {
 	private wearBelt(id: string, level: number, user: MRE.User) {
 		const transformRecord = this.transformData[this.beltData.transform];
 		const userId = user.id;
+		const prefabs = this.assetMgr.getPrefabs();
 
-		this.logUser(user, "assigning belt id: " + id);
+		logUser(user, "assigning belt id: " + id);
 		
 		// If the user is wearing a belt, destroy it.
 		this.removeUserBelt(user);
@@ -573,7 +397,7 @@ export default class DojoShirt {
 
 		// create the belt
 		runtime.belt = MRE.Actor.CreateFromPrefab(this.context, {
-			prefab: this.prefabs[id],
+			prefab: prefabs[id],
 			actor: {
 				transform: {
 					local: {
@@ -597,6 +421,22 @@ export default class DojoShirt {
 		this.runtimeSettings.set(user.id, runtime);
 	}
 
+	private async saveUserSettings(user: MRE.User){
+		// save the user settings
+		const runtime = this.runtimeSettings.get(user.id);
+		if(runtime.settings !== null){
+			// add the username if needed
+			if(runtime.settings.name === null){
+				runtime.settings.name = user.name;
+			}
+
+			await this.settingsMgr.setUserSettings(runtime.settings)
+			.then(function(success){
+				console.log("[" + user.id + "|" + user.name + "]: settings saved");
+			});
+		}
+	}
+
 	/**
 	 * 
 	 * @param user Remove the user assets
@@ -613,7 +453,7 @@ export default class DojoShirt {
 	 */
 	private removeUserBelt(user: MRE.User){
 		const runtime = this.runtimeSettings.get(user.id);
-		this.logUser(user, "removing belt");
+		logUser(user, "removing belt");
 
 		if(runtime.belt !== null){
 			runtime.belt.destroy();
@@ -628,7 +468,7 @@ export default class DojoShirt {
 	 */
 	private removeUserShirt(user: MRE.User) {
 		const runtime = this.runtimeSettings.get(user.id);
-		this.logUser(user, "removing shirt");
+		logUser(user, "removing shirt");
 
 		if(runtime.shirt !== null){
 			runtime.shirt.destroy();

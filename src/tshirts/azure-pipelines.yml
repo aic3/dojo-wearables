@@ -11,6 +11,7 @@ trigger:
   paths:
     include:
       - src/tshirts*
+      - src/dojo-common*
 
 resources:
 - repo: self

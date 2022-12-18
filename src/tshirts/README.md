@@ -73,13 +73,18 @@ docker build . -t dojo-tshirt
 ### Run a local container instance
 
 ```cmd
-docker run -it --rm  --name dojo-tshirt -p 3901:3901 -e X-FUNCTIONS-KEY={key to azure functions} dojo-tshirt
+docker run -it --rm  --name dojo-tshirt -p 3901:3901 -e X_FUNCTIONS_KEY={key to azure functions} dojo-tshirt
 ```
 
 ## Running Azure Storage containers locally
 
-- ref: [Use the Azurite emulator for local Azure Storage development](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=docker-hub)
+* ref: [Use the Azurite emulator for local Azure Storage development](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=docker-hub)
 
 ```cmd
-docker run --name azureite -d  -p 10000:10000 -p 10001:10001 -p 10002:10002 -v c:/dev/data/azurite:/data mcr.microsoft.com/azure-storage/azurite 
+docker run --name azurite -d  -p 10000:10000 -p 10001:10001 -p 10002:10002 -v c:/dev/data/azurite:/data mcr.microsoft.com/azure-storage/azurite 
 ```
+
+## Notes
+
+[Typescript library tutorial](https://www.tsmean.com/articles/how-to-write-a-typescript-library/)
+[Selectivly ignoring tslint errors](https://stackoverflow.com/questions/59729654/how-ignore-typescript-errors-with-ts-ignore)

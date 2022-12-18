@@ -87,6 +87,7 @@ export default class DojoCoach {
 		const anchorX = 4;
 		const anchorY = 2.5;
 
+		// prompt the user and provide a response
 		this.createButton(menu.id,
 			"promptUser",
 			"User Prompt",
@@ -108,6 +109,7 @@ export default class DojoCoach {
 				});
 			});
 
+		// stream message based on user properties / datetime
 		this.createButton(menu.id,
 			"playAudio",
 			"Play Audio",
@@ -124,6 +126,13 @@ export default class DojoCoach {
 			});
 	}
 
+	/**
+	 * Call the speech service 
+	 * @param user 
+	 * @param actor 
+	 * @param msg 
+	 * @returns 
+	 */
 	private async playUserMsg(user: MRE.User, actor: MRE.Actor, msg: string){		
 		const code = process.env["X_SPEECH_SVC_CODE"];
 		const rootUri = this.speechSvcEndpoint; 

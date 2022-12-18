@@ -10,7 +10,7 @@ trigger:
       - development
   paths:
     include:
-      - src/tshirts*
+      - src/belts*
       - src/dojo-common*
 
 resources:
@@ -19,9 +19,9 @@ resources:
 variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '7bea5c04-127f-4d9c-895c-ff149edac736'
-  imageRepository: 'dojoapps'
+  imageRepository: 'dojobelts'
   containerRegistry: 'dojoapps.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/src/TShirts.Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/Belts.Dockerfile'
   tag: '$(Build.BuildNumber)'
   
   # Agent VM image name

@@ -5,7 +5,6 @@ ENV WEBSITES_PORT=3901
 
 # copy dojo-common
 COPY dojo-common ./dojo-common
-COPY dojo-common/tsconfig.json ./dojo-common
 
 # build dojo-common
 WORKDIR /opt/mre/dojo-common

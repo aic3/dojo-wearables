@@ -3,7 +3,7 @@
  */
 
 import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import { DojoData, logUser, DojoApp, UserSettings } from "dojo-common"
+import { DojoData, logUser, DojoApp, UserSettings } from "dojo-common";
 
 /**
  * DojoShirt Application - Showcasing avatar attachments.
@@ -14,6 +14,9 @@ export default class DojoBelt extends DojoApp {
 	private dojoData = new DojoData();
 	private beltData = this.dojoData.getBeltData();
 	private transformData = this.dojoData.getTransformData();
+	private giKey = "Dojo Gi";
+	private giFile = "dojo-gi-logo.glb";
+	private giTransform = "gi-low-poly";
 	
 	/**
 	 * Constructs a new instance of this class.
@@ -27,6 +30,7 @@ export default class DojoBelt extends DojoApp {
 
 	// load the shirt data
 	protected async preloadAssets() {
+		await this.assetMgr.loadAsset(this.giKey, this.giFile);
 		await this.preloadBelts();
 	}
 
@@ -58,7 +62,7 @@ export default class DojoBelt extends DojoApp {
 		this.saveUserSettings(user, false, true);
 
 		// If the user was wearing anything, destroy it. Otherwise it would be
-		// orphaned in the world.
+		// orphaned in the world.		
 		this.removeUserBelt(user);
 	}
 
@@ -173,6 +177,45 @@ export default class DojoBelt extends DojoApp {
 		);
 	}
 
+	private attachGi(user: MRE.User) {
+		const transformRecord = this.transformData[this.giTransform];
+		const userId = user.id;
+		const prefabs = this.assetMgr.getPrefabs();
+
+		logUser(user, "assigning prefab to id: " + userId);
+		
+		// If the user is wearing a belt, destroy it.
+		this.removeUserGi(user);
+
+		// Create the model and attach it to the avatar
+		const runtime = this.runtimeSettings.get(user.id);
+
+		// create the belt
+		runtime.shirt = MRE.Actor.CreateFromPrefab(this.context, {
+			prefab: prefabs[this.giKey],
+			actor: {
+				transform: {
+					local: {
+						position: transformRecord.position,
+						rotation: MRE.Quaternion.FromEulerAngles(
+							transformRecord.rotation.x * MRE.DegreesToRadians,
+							transformRecord.rotation.y * MRE.DegreesToRadians,
+							transformRecord.rotation.z * MRE.DegreesToRadians),
+						scale: transformRecord.scale,
+					}
+				},
+				attachment: {
+					attachPoint: transformRecord.attachPoint as MRE.AttachPoint,
+					userId
+				}
+			}
+		});
+
+		// update the current setting
+		runtime.settings.shirt = this.giKey;
+		this.runtimeSettings.set(user.id, runtime);
+	}
+
 	/**
 	 * assigns the belt to the user
 	 */
@@ -182,9 +225,12 @@ export default class DojoBelt extends DojoApp {
 		const prefabs = this.assetMgr.getPrefabs();
 
 		logUser(user, "assigning belt id: " + id);
-		
+
 		// If the user is wearing a belt, destroy it.
 		this.removeUserBelt(user);
+
+		// automatically assign this gi if the user is wearing a belt
+		this.attachGi(user);
 
 		// Create the model and attach it to the avatar
 		const runtime = this.runtimeSettings.get(user.id);
@@ -219,13 +265,32 @@ export default class DojoBelt extends DojoApp {
 	 * removes the allocated belt
 	 * @param user 
 	 */
-	private removeUserBelt(user: MRE.User){
+	private removeUserBelt(user: MRE.User) {
 		const runtime = this.runtimeSettings.get(user.id);
 		logUser(user, "removing belt");
 
+		// removing the user gi
+		this.removeUserGi(user);
+		
 		if(runtime.belt !== null){
 			runtime.belt.destroy();
 			runtime.belt = null;
+		}
+
+		this.runtimeSettings.set(user.id, runtime);
+	}
+
+	/**
+	 * removes the user gi
+	 * @param user 
+	 */
+	private removeUserGi(user: MRE.User) {
+		const runtime = this.runtimeSettings.get(user.id);
+		logUser(user, "removing gi");
+
+		if(runtime.shirt !== null){
+			runtime.shirt.destroy();
+			runtime.shirt = null;
 		}
 
 		this.runtimeSettings.set(user.id, runtime);

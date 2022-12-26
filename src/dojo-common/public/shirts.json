@@ -1,22 +1,22 @@
 {
-    "tshirt-red": {      
-      "displayName": "T-Shirt Red",
-      "resourceName": "tshirt-red.glb",
-      "transform": "shirt"
-    },
-    "tshirt-blue": {
-      "displayName": "T-Shirt Blue",
-      "resourceName": "tshirt-blue.glb",
-      "transform": "shirt"
-    },
-    "tshirt-green": {
-      "displayName": "T-Shirt Green",
-      "resourceName": "tshirt-green.glb",
-      "transform": "shirt"
-    },
-    "tshirt-white": {
-      "displayName": "T-Shirt White",
-      "resourceName": "tshirt-white.glb",
-      "transform": "shirt"
-    }
+  "tshirt-red": {      
+    "displayName": "T-Shirt Red",
+    "resourceName": "tshirt-red.glb",
+    "transform": "shirt"
+  },
+  "tshirt-blue": {
+    "displayName": "T-Shirt Blue",
+    "resourceName": "tshirt-blue.glb",
+    "transform": "shirt"
+  },
+  "tshirt-green": {
+    "displayName": "T-Shirt Green",
+    "resourceName": "tshirt-green.glb",
+    "transform": "shirt"
+  },
+  "tshirt-white": {
+    "displayName": "T-Shirt White",
+    "resourceName": "tshirt-white.glb",
+    "transform": "shirt"
   }
+}

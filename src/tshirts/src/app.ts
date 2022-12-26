@@ -13,7 +13,6 @@ export default class DojoShirt extends DojoApp {
 	
 	private dojoData = new DojoData();
 	private shirtData = this.dojoData.getShirtData();
-	private beltData = this.dojoData.getBeltData();
 	private transformData = this.dojoData.getTransformData();
 	
 	/**
@@ -83,16 +82,18 @@ export default class DojoShirt extends DojoApp {
 					color: MRE.Color3.Yellow()
 				},
 				transform: {
-					local: { position: { x: 0.5, y: y + 0.75, z: 0 } }
+					local: { position: { x: 1.5, y: y + 0.75, z: 0 } }
 				}
 			}
 		});
 
 		// Loop over the database, creating a menu item for each entry.
 		for (const shirtId of shirts) {
+			const shirt = this.shirtData[shirtId];
+			
 			this.assetMgr.createMREButton(menu.id,
 				shirtId,
-				this.shirtData[shirtId].displayName,
+				shirt.displayName,
 				{x:0, y:y, z:0},
 				user => this.wearShirt(shirtId, user));
 
@@ -146,6 +147,12 @@ export default class DojoShirt extends DojoApp {
 		this.removeUserShirt(user);
 
 		const shirtRecord = this.shirtData[id];
+
+		// exit if we dont have the shirt record
+		if(shirtRecord === null || shirtRecord === undefined) {
+			logUser(user, "Shirt id not found: " + id);
+			return;
+		}
 		const transformRecord = this.transformData[shirtRecord.transform];
 		const userId = user.id;
 

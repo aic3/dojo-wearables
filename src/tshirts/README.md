@@ -12,6 +12,23 @@
 
 ## Build
 
+### Build dojo-common 
+
+- run under src\dojo-common
+
+```
+npm install
+npm run build
+```
+
+### Link the MRE root to the dojo-common
+- run under any of the MREs: belt, coach, shirts
+```
+npm link ../dojo-common
+npm install
+npm run build
+```
+
 * Command line: `npm run build`.
 * VSCode: `Shift+Ctrl+B`, then select 'build samples/hello-world'.
 
@@ -62,7 +79,7 @@ Once you have your MRE up and running, and you've successfully spawned an instan
 
 Based on the MRE SDK [Wear a Hat demo](https://github.com/microsoft/mixed-reality-extension-sdk-samples/tree/master/samples/wear-a-hat)
 
-## Docker container debugging
+## Ccontainer debugging
 
 ### Build locally
 

@@ -84,8 +84,25 @@ export default class DojoCoach {
 	 */
 	private createCoachOptions() {
 		const menu = MRE.Actor.Create(this.context, {});
-		const anchorX = 4;
+		const anchorX = 0;
 		const anchorY = 2.5;
+
+		// Create a label for the menu title.
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: ''.padStart(8, ' ') + "Audio Test",
+					height: 0.8,
+					anchor: MRE.TextAnchorLocation.MiddleLeft,
+					color: MRE.Color3.Yellow()
+				},
+				transform: {
+					local: { position: { x: anchorX - 1.75, y: anchorY + 1, z: 0 } }
+				}
+			}
+		});
 
 		// prompt the user and provide a response
 		this.createButton(menu.id,

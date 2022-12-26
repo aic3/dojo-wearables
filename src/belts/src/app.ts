@@ -71,23 +71,43 @@ export default class DojoBelt extends DojoApp {
 	 */
 	private createRewardButton() {
 		const menu = MRE.Actor.Create(this.context, {});
-		const anchorX = 4;
+		const anchorX = 0;
 		const anchorY = 2.5;
 
+		// Create a label for the menu title.
+		MRE.Actor.Create(this.context, {
+			actor: {
+				parentId: menu.id,
+				name: 'label',
+				text: {
+					contents: ''.padStart(8, ' ') + "Set your level",
+					height: 0.8,
+					anchor: MRE.TextAnchorLocation.MiddleLeft,
+					color: MRE.Color3.Yellow()
+				},
+				transform: {
+					local: { position: { x: anchorX - 1.75, y: anchorY + 1, z: 0 } }
+				}
+			}
+		});
+
+		// level up button
 		this.assetMgr.createMREButton(menu.id,
 			"levelUp",
 			"Level Up",
 			{x:anchorX, y:anchorY, z:0},
 			user => this.incrementLevel(1, user));
 
+		// level down button
 		this.assetMgr.createMREButton(menu.id,
 			"levelDown",
 			"Level Down",
 			{x:anchorX, y:anchorY - 0.5, z:0},
 			user => this.incrementLevel(-1, user));
 		
+		// clear level button
 		this.assetMgr.createMREButton(menu.id,
-			"cleanLevel",
+			"clearLevel",
 			"Clear",
 			{x:anchorX, y:anchorY - 1, z:0},
 			user => {
@@ -97,6 +117,7 @@ export default class DojoBelt extends DojoApp {
 				this.runtimeSettings.set(user.id, runtime);
 			});
 
+		// save belt settings
 		this.assetMgr.createMREButton(menu.id,
 			"saveBeltSettings",
 			"Save Belt Settings",
@@ -177,6 +198,10 @@ export default class DojoBelt extends DojoApp {
 		);
 	}
 
+	/**
+	 * Attach the DojoGi
+	 * @param user 
+	 */
 	private attachGi(user: MRE.User) {
 		const transformRecord = this.transformData[this.giTransform];
 		const userId = user.id;

@@ -14,7 +14,6 @@ export default class DojoShirt extends DojoApp {
 	private dojoData = new DojoData();
 	private shirtData = this.dojoData.getShirtData();
 	private transformData = this.dojoData.getTransformData();
-	
 	/**
 	 * Constructs a new instance of this class.
 	 * @param context The MRE SDK context.

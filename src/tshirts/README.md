@@ -105,3 +105,4 @@ docker run --name azurite -d  -p 10000:10000 -p 10001:10001 -p 10002:10002 -v c:
 
 [Typescript library tutorial](https://www.tsmean.com/articles/how-to-write-a-typescript-library/)
 [Selectivly ignoring tslint errors](https://stackoverflow.com/questions/59729654/how-ignore-typescript-errors-with-ts-ignore)
+

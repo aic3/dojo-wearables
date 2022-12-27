@@ -1,10 +1,10 @@
 {
   "include": [
     "./src",
-    "./public"  
+    "./public"
   ],
   "compilerOptions": {
-    "outDir": "./built", /* Redirect output strssucture to the directory. */
+    "outDir": "./dist", /* Redirect output strssucture to the directory. */
     "rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     "skipLibCheck": true,
     /* Basic Options */

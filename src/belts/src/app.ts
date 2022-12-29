@@ -165,7 +165,7 @@ export default class DojoBelt extends DojoApp {
 			
 			// min level
 			level = -1;
-		} else if (level > belts.length) {
+		} else if (level > belts.length - 1) {
 			logUser(user, "Max level reached: " + level);
 			beltKey = belts[belts.length - 1];
 

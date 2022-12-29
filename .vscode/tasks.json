@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "src/belts",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - src/belts",
+			"detail": "tsc --build && eslint --ext .ts src"
+		}
+	]
+}
